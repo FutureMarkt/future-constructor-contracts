@@ -1,27 +1,106 @@
-# Future Constructor Contracts
+# Future Constructor
 
-Smart contracts for the Future Constructor Token Factory project. This project uses Hardhat 3 Beta for development, testing, and deployment.
+A no-code ERC-20 token creator built on **BNB Smart Chain** and other EVM-compatible networks. Create custom ERC-20 tokens instantly with configurable parameters, powered by Chainlink price feeds for accurate USD-based fees.
 
-## Contracts
+**Website:** https://constructor.futuremarkt.com  
+**Operator:** Future Markt
 
-- **TokenFactory.sol** - Factory contract for deploying ERC-20 tokens with configurable USD fees
-- **BasicERC20.sol** - Minimal ERC-20 token implementation with configurable decimals
-- **AggregatorV3Interface.sol** - Chainlink price feed interface
+---
 
-## Features
+## Overview
 
-- ✅ Deploy minimal ERC-20 tokens with custom parameters
-- ✅ Configurable USD fees converted to native tokens via Chainlink
-- ✅ Security audited (see [AUDIT_REPORT.md](./AUDIT_REPORT.md))
-- ✅ Support for Polygon and BNB Smart Chain
-- ✅ Pausable and upgradeable fee configuration
+Future Constructor is a smart contract factory that allows anyone to deploy standard ERC-20 tokens without writing code. Users pay a fixed USD-denominated fee (converted to native currency via Chainlink oracles) and receive a fully functional ERC-20 token with customizable name, symbol, decimals, and initial supply.
+
+### Key Features
+
+- ✅ No-code ERC-20 token deployment
+- ✅ Multi-chain support: BNB Smart Chain, Ethereum, Polygon, Arbitrum One, Base
+- ✅ USD-based fees converted to native tokens via Chainlink price feeds
+- ✅ Configurable token parameters (name, symbol, decimals, supply)
+- ✅ Pausable factory with owner controls
 - ✅ Comprehensive input validation and overflow protection
+
+---
+
+## Technology Stack
+
+- **Blockchain**: BNB Smart Chain (primary) + EVM-compatible chains
+- **Smart Contracts**: Solidity 0.8.20
+- **Compiler Settings**: 
+  - Optimizer enabled: 200 runs
+  - EVM Version: Shanghai
+  - Libraries: OpenZeppelin Contracts 5.4.0 (imported via 5.1.0 with compatible components)
+- **Development**: Hardhat 3.x, TypeScript
+- **Price Feeds**: Chainlink Aggregators
+
+---
+
+## Supported Networks
+
+| Network | Chain ID | Status |
+|---------|----------|--------|
+| **BNB Smart Chain** | 56 | ✅ Active |
+| **Ethereum Mainnet** | 1 | ✅ Active |
+| **Polygon Mainnet** | 137 | ✅ Active |
+| **Arbitrum One** | 42161 | ✅ Active |
+| **Base** | 8453 | ✅ Active |
+| BNB Smart Chain Testnet | 97 | 🔧 For testing |
+| Arbitrum Sepolia Testnet | 421614 | 🔧 For testing |
+
+---
+
+## Deployed Contracts
+
+### Current Deployments (v2)
+
+#### TokenFactory `0x7820C4E3C28caeaa8c729F96cF43471Ef117b852`
+- **Deployed:** January 21, 2026
+- **Networks:** BNB Smart Chain, Arbitrum One, Base
+- **Verification:** ✅ Exact match on Sourcify for all chains; verified on BscScan
+
+| Network | Explorer Link |
+|---------|---------------|
+| BNB Smart Chain | [0x7820...b852 on BscScan](https://bscscan.com/address/0x7820C4E3C28caeaa8c729F96cF43471Ef117b852) |
+| Arbitrum One | [0x7820...b852 on Arbiscan](https://arbiscan.io/address/0x7820C4E3C28caeaa8c729F96cF43471Ef117b852) |
+| Base | [0x7820...b852 on BaseScan](https://basescan.org/address/0x7820C4E3C28caeaa8c729F96cF43471Ef117b852) |
+
+#### TokenFactory `0x3171C50E87F67b921FCB9261E1D9fD598b03dA04`
+- **Deployed:** January 2026
+- **Networks:** Ethereum, Polygon (current), BNB/Arbitrum/Base (earlier deployment)
+- **Verification:** ✅ Exact match on Sourcify for all chains; verified on Polygonscan
+
+| Network | Explorer Link |
+|---------|---------------|
+| Ethereum | [0x3171...dA04 on Etherscan](https://etherscan.io/address/0x3171C50E87F67b921FCB9261E1D9fD598b03dA04) |
+| Polygon | [0x3171...dA04 on Polygonscan](https://polygonscan.com/address/0x3171C50E87F67b921FCB9261E1D9fD598b03dA04) |
+
+### Fee Configuration
+
+- **Fee Amount:** $3 per token on most chains ($6 on Ethereum mainnet)
+- **Fee Recipient:** `0x7f0C375dc32653CA5d778835ed5dC5D34d7C97cc`
+- **Price Conversion:** Chainlink price feeds convert USD to native currency in real-time
+
+---
 
 ## Installation
 
+### Prerequisites
+
+- Node.js 16+ and npm
+- Git
+
+### Setup
+
 ```bash
+# Clone the repository
+git clone <repository-url>
+cd future-constructor-contracts
+
+# Install dependencies
 npm install
 ```
+
+---
 
 ## Configuration
 
@@ -29,31 +108,45 @@ Create a `.env` file in the root directory with the following variables:
 
 ```env
 # Private Keys (without 0x prefix)
+ETHEREUM_PRIVATE_KEY=your_ethereum_private_key_here
 POLYGON_PRIVATE_KEY=your_polygon_private_key_here
 BSC_PRIVATE_KEY=your_bsc_private_key_here
 ARBITRUM_PRIVATE_KEY=your_arbitrum_private_key_here
+BASE_PRIVATE_KEY=your_base_private_key_here
 
 # RPC URLs (optional - defaults are used if not set)
+ETHEREUM_RPC_URL=https://eth.llamarpc.com
 POLYGON_RPC_URL=https://polygon-rpc.com
 BSC_RPC_URL=https://bsc-dataseed1.binance.org
 ARBITRUM_RPC_URL=https://arb1.arbitrum.io/rpc
+BASE_RPC_URL=https://mainnet.base.org
 
 # Chainlink Aggregator Addresses
-CHAINLINK_AGGREGATOR_POLYGON=0xf9680D99D6D8bF626D6681C5B7DfF154dDbfF56d
+CHAINLINK_AGGREGATOR_ETHEREUM=0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419
+CHAINLINK_AGGREGATOR_POLYGON=0xAB594600376Ec9fD91F8e885dADF0CE036862dE0
 CHAINLINK_AGGREGATOR_BSC=0x0567F2323251f0aab15c8Df3f986C17B5b4CF09b
 CHAINLINK_AGGREGATOR_ARBITRUM=0x639Fe6ab55C921f74e7fac1ee960C0B6293ba612
+CHAINLINK_AGGREGATOR_BASE=0x71041dddad3595F9CEd3DcCFBe3D1F4b0a16Bb70
 
 # Fee Configuration
-FEE_RECIPIENT=0x0000000000000000000000000000000000000000
-FEE_USD_WEI=0
+FEE_RECIPIENT=0x7f0C375dc32653CA5d778835ed5dC5D34d7C97cc
+FEE_USD_WEI=3000000000000000000  # $3 USD (18 decimals)
 
 # Block Explorer API Keys (for contract verification)
+ETHERSCAN_API_KEY=your_etherscan_api_key
 POLYGONSCAN_API_KEY=your_polygonscan_api_key
 BSCSCAN_API_KEY=your_bscscan_api_key
 ARBISCAN_API_KEY=your_arbiscan_api_key
+BASESCAN_API_KEY=your_basescan_api_key
 ```
 
-## Compilation
+See `env.template` for a complete example.
+
+---
+
+## Build & Test
+
+### Compile Contracts
 
 ```bash
 npm run compile
@@ -61,7 +154,7 @@ npm run compile
 npx hardhat compile
 ```
 
-## Testing
+### Run Tests
 
 ```bash
 npm test
@@ -69,22 +162,11 @@ npm test
 npx hardhat test
 ```
 
-Run specific test types:
-
-```bash
-npx hardhat test solidity
-npx hardhat test mocha
-```
+---
 
 ## Deployment
 
-### Deploy to Polygon
-
-```bash
-npm run deploy:polygon
-# or
-npx hardhat run scripts/deploy-polygon.ts --network polygon
-```
+The project includes deployment scripts for all supported networks:
 
 ### Deploy to BNB Smart Chain
 
@@ -92,6 +174,22 @@ npx hardhat run scripts/deploy-polygon.ts --network polygon
 npm run deploy:bsc
 # or
 npx hardhat run scripts/deploy-bsc.ts --network bsc
+```
+
+### Deploy to Ethereum
+
+```bash
+npm run deploy:ethereum
+# or
+npx hardhat run scripts/deploy-ethereum.ts --network ethereum
+```
+
+### Deploy to Polygon
+
+```bash
+npm run deploy:polygon
+# or
+npx hardhat run scripts/deploy-polygon.ts --network polygon
 ```
 
 ### Deploy to Arbitrum One
@@ -102,54 +200,71 @@ npm run deploy:arbitrum
 npx hardhat run scripts/deploy-arbitrum.ts --network arbitrum
 ```
 
-**⚠️ Important for Arbitrum deployment:**
+### Deploy to Base
 
-1. **Minimum required `.env` variables for Arbitrum:**
-   ```env
-   ARBITRUM_PRIVATE_KEY=your_private_key_without_0x_prefix
-   CHAINLINK_AGGREGATOR_ARBITRUM=0x639Fe6ab55C921f74e7fac1ee960C0B6293ba612
-   ```
+```bash
+npm run deploy:base
+# or
+npx hardhat run scripts/deploy-base.ts --network base
+```
 
-2. **Optional but recommended:**
-   - `ARBITRUM_RPC_URL` - Custom RPC endpoint (defaults to public Arbitrum RPC)
-   - `FEE_RECIPIENT` - Address to receive fees (defaults to deployer address)
-   - `FEE_USD_WEI` - Initial fee in USD (18 decimals, default: 0 = free)
-   - `ARBISCAN_API_KEY` - For contract verification after deployment
+**Requirements:**
+1. Valid private key in `.env` for target network
+2. Chainlink aggregator address for target network
+3. Native currency for gas fees on target network
+4. Optional: Block explorer API key for automatic verification
 
-3. **Ensure you have ETH on Arbitrum One** - You need ETH for gas fees (not ETH on mainnet!)
-
-4. **Recommended RPC providers for Arbitrum:**
-   - Public: `https://arb1.arbitrum.io/rpc` (free, default)
-   - Alchemy: `https://arb-mainnet.g.alchemy.com/v2/YOUR_API_KEY` (more reliable)
-   - Infura: `https://arbitrum-mainnet.infura.io/v3/YOUR_API_KEY` (more reliable)
-
-## Scripts
-
-- `npm run compile` - Compile contracts
-- `npm test` - Run all tests
-- `npm run deploy:polygon` - Deploy to Polygon network
-- `npm run deploy:bsc` - Deploy to BNB Smart Chain
-- `npm run deploy:arbitrum` - Deploy to Arbitrum One network
-
-## Documentation
-
-- [AUDIT_REPORT.md](./AUDIT_REPORT.md) - Security audit report
-- [CHANGELOG.md](./CHANGELOG.md) - Changelog with all security fixes
+---
 
 ## Security
 
-All contracts have been audited and all identified issues have been fixed. See [AUDIT_REPORT.md](./AUDIT_REPORT.md) for details.
+⚠️ **Important Security Notice**
 
-**Security Rating:** 9.0/10
+This project has **NOT been audited by any third-party security firm**. The contracts have undergone internal code review, but no external audit has been performed.
 
-## Networks Supported
+- **Internal Review:** See [docs/INTERNAL_REVIEW.md](./docs/INTERNAL_REVIEW.md) for findings and status
+- **Use at Your Own Risk:** Deploy and use these contracts at your own discretion
+- **Report Issues:** If you discover security vulnerabilities, please report them to futuremarktgroup@gmail.com
 
-- Polygon Mainnet (Chain ID: 137)
-- Polygon Mumbai Testnet (Chain ID: 80001)
-- BNB Smart Chain (Chain ID: 56)
-- Arbitrum One (Chain ID: 42161)
-- Arbitrum Sepolia Testnet (Chain ID: 421614)
+### Security Best Practices Implemented
+
+- ✅ Reentrancy protection (`ReentrancyGuard`)
+- ✅ Access control (`Ownable`)
+- ✅ Pausable functionality for emergency stops
+- ✅ Comprehensive input validation
+- ✅ Safe arithmetic (Solidity 0.8.20 built-in)
+- ✅ Price feed staleness checks
+- ✅ Overflow protection in token supply calculations
+
+---
+
+## Documentation
+
+- **[docs/INTERNAL_REVIEW.md](./docs/INTERNAL_REVIEW.md)** - Internal security review (not a third-party audit)
+- **[CHANGELOG.md](./CHANGELOG.md)** - Version history and security fixes
+- **[SETUP_ENV.md](./SETUP_ENV.md)** - Environment setup guide
+- **[ARBITRUM_DEPLOY.md](./ARBITRUM_DEPLOY.md)** - Arbitrum deployment guide
+
+---
+
+## Links
+
+- **Website:** https://constructor.futuremarkt.com
+- **Lite Paper:** https://constructor.futuremarkt.com/en/lite-paper
+- **Terms of Service:** https://constructor.futuremarkt.com/en/terms
+- **Privacy Policy:** https://constructor.futuremarkt.com/en/privacy
+- **X (Twitter):** https://x.com/fm_constructor
+- **Telegram:** https://t.me/fmweb3
+- **Contact:** futuremarktgroup@gmail.com
+
+---
 
 ## License
 
 MIT
+
+---
+
+## Disclaimer
+
+Future Constructor is provided "as is" without warranties of any kind. The smart contracts have not been audited by third-party security firms. Users deploy and interact with these contracts at their own risk. Always conduct your own security assessment before deploying to production.
