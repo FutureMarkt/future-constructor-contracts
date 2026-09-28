@@ -1,0 +1,79 @@
+# Future Constructor - Deployed Contracts
+
+## BNB Smart Chain Mainnet (Chain ID: 56)
+
+### TokenFactory (Current - v2)
+Address: 0x7820C4E3C28caeaa8c729F96cF43471Ef117b852
+Deployed: January 21, 2026
+Explorer: https://bscscan.com/address/0x7820C4E3C28caeaa8c729F96cF43471Ef117b852
+Verification: ✅ Verified on BscScan, exact match on Sourcify
+
+### TokenFactory (Earlier - v1)
+Address: 0x3171C50E87F67b921FCB9261E1D9fD598b03dA04
+Deployed: January 2026
+Explorer: https://bscscan.com/address/0x3171C50E87F67b921FCB9261E1D9fD598b03dA04
+Verification: ✅ Verified on BscScan, exact match on Sourcify
+Status: Earlier deployment, replaced by v2
+
+---
+
+## Multi-Chain Deployments
+
+### Ethereum Mainnet (Chain ID: 1)
+TokenFactory: 0x3171C50E87F67b921FCB9261E1D9fD598b03dA04
+Explorer: https://etherscan.io/address/0x3171C50E87F67b921FCB9261E1D9fD598b03dA04
+Verification: ✅ Exact match on Sourcify
+
+### Polygon Mainnet (Chain ID: 137)
+TokenFactory: 0x3171C50E87F67b921FCB9261E1D9fD598b03dA04
+Explorer: https://polygonscan.com/address/0x3171C50E87F67b921FCB9261E1D9fD598b03dA04
+Verification: ✅ Verified on Polygonscan, exact match on Sourcify
+
+### Arbitrum One (Chain ID: 42161)
+TokenFactory: 0x7820C4E3C28caeaa8c729F96cF43471Ef117b852
+Deployed: September 27, 2026
+Explorer: https://arbiscan.io/address/0x7820C4E3C28caeaa8c729F96cF43471Ef117b852
+Verification: ✅ Exact match on Sourcify
+
+### Base (Chain ID: 8453)
+TokenFactory: 0x7820C4E3C28caeaa8c729F96cF43471Ef117b852
+Deployed: September 27, 2026
+Explorer: https://basescan.org/address/0x7820C4E3C28caeaa8c729F96cF43471Ef117b852
+Verification: ✅ Exact match on Sourcify
+
+---
+
+## Fee Recipient
+Address: 0x7f0C375dc32653CA5d778835ed5dC5D34d7C97cc
+Purpose: Receives token deployment fees
+
+---
+
+## Contract Details
+
+### TokenFactory Features
+- No-code ERC-20 token deployment
+- USD-based fees converted via Chainlink price feeds
+- Pausable by owner
+- Configurable fee settings
+- Comprehensive input validation
+
+### BasicERC20 Features
+- Standard ERC-20 implementation
+- Configurable decimals (0-30)
+- Initial supply minted to specified owner
+- No additional minting capability (immutable supply)
+
+---
+
+## Compiler & Verification
+
+- Solidity: 0.8.20
+- Optimizer: Enabled (200 runs)
+- EVM Version: Shanghai
+- OpenZeppelin: 5.4.0 components (imported via 5.1.0)
+
+All deployments are verified with exact source code match on:
+- Sourcify (all chains)
+- BscScan (BNB Smart Chain)
+- Polygonscan (Polygon)
