@@ -1,7 +1,10 @@
-# Changelog - Security Audit Fixes
+# Changelog - Security Fixes
 
 ## Summary
-All critical, medium, and low severity issues identified in the security audit have been addressed.
+
+Built on OpenZeppelin Contracts v5; factory source code is verified on Sourcify; no independent audit.
+
+Issues identified in the internal code review have been addressed in the contracts.
 
 ## Changes Made
 
@@ -141,9 +144,6 @@ Update tests to:
 
 ---
 
-## Security Rating
+## Security
 
-**Before Audit:** 6.5/10  
-**After Fixes:** 9.0/10
-
-All critical and medium severity issues have been resolved. The contract is now production-ready after thorough testing.
+Built on OpenZeppelin Contracts v5; factory source code is verified on Sourcify; no independent audit.

@@ -51,32 +51,35 @@ Future Constructor is a smart contract factory that allows anyone to deploy stan
 
 ## Deployed Contracts
 
-### Current Deployments (v2)
+### Current factory `0x7820C4E3C28caeaa8c729F96cF43471Ef117b852`
 
-#### TokenFactory `0x7820C4E3C28caeaa8c729F96cF43471Ef117b852`
-- **Deployed:** January 21, 2026
-- **Networks:** BNB Smart Chain, Arbitrum One, Base
-- **Verification:** ✅ Exact match on Sourcify for all chains; verified on BscScan
+Deployed on BNB Smart Chain, Arbitrum One, and Base. There is no contract at this address on Ethereum or Polygon.
 
-| Network | Explorer Link |
-|---------|---------------|
-| BNB Smart Chain | [0x7820...b852 on BscScan](https://bscscan.com/address/0x7820C4E3C28caeaa8c729F96cF43471Ef117b852) |
-| Arbitrum One | [0x7820...b852 on Arbiscan](https://arbiscan.io/address/0x7820C4E3C28caeaa8c729F96cF43471Ef117b852) |
-| Base | [0x7820...b852 on BaseScan](https://basescan.org/address/0x7820C4E3C28caeaa8c729F96cF43471Ef117b852) |
+Source code is an exact match on Sourcify for each deployment below. BaseScan does not show this contract as verified.
 
-#### TokenFactory `0x3171C50E87F67b921FCB9261E1D9fD598b03dA04`
-- **Deployed:** January 2026
-- **Networks:** Ethereum, Polygon (current), BNB/Arbitrum/Base (earlier deployment)
-- **Verification:** ✅ Exact match on Sourcify for all chains; verified on Polygonscan
+| Network | Deployed (UTC) | Explorer | Sourcify |
+|---------|----------------|----------|----------|
+| BNB Smart Chain | 21 January 2026 | [0x7820...b852](https://bscscan.com/address/0x7820C4E3C28caeaa8c729F96cF43471Ef117b852) | [Exact match](https://repo.sourcify.dev/56/0x7820C4E3C28caeaa8c729F96cF43471Ef117b852) |
+| Arbitrum One | 27 September 2026 | [0x7820...b852](https://arbiscan.io/address/0x7820C4E3C28caeaa8c729F96cF43471Ef117b852) | [Exact match](https://repo.sourcify.dev/42161/0x7820C4E3C28caeaa8c729F96cF43471Ef117b852) |
+| Base | 27 September 2026 | [0x7820...b852](https://basescan.org/address/0x7820C4E3C28caeaa8c729F96cF43471Ef117b852) | [Exact match](https://repo.sourcify.dev/8453/0x7820C4E3C28caeaa8c729F96cF43471Ef117b852) |
 
-| Network | Explorer Link |
-|---------|---------------|
-| Ethereum | [0x3171...dA04 on Etherscan](https://etherscan.io/address/0x3171C50E87F67b921FCB9261E1D9fD598b03dA04) |
-| Polygon | [0x3171...dA04 on Polygonscan](https://polygonscan.com/address/0x3171C50E87F67b921FCB9261E1D9fD598b03dA04) |
+### Legacy factory `0x3171C50E87F67b921FCB9261E1D9fD598b03dA04`
+
+This is the legacy TokenFactory. It is still the factory on Ethereum and Polygon. On BNB Smart Chain, Arbitrum One, and Base it was replaced by `0x7820C4E3C28caeaa8c729F96cF43471Ef117b852`. On Base it was the factory in use from January 2026 through September 2026.
+
+Source code is an exact match on Sourcify for every deployment below. Polygonscan shows an exact source match. Etherscan does not show this contract as verified.
+
+| Network | Deployed (UTC) | Explorer | Sourcify |
+|---------|----------------|----------|----------|
+| BNB Smart Chain | 21 January 2026 | [0x3171...dA04](https://bscscan.com/address/0x3171C50E87F67b921FCB9261E1D9fD598b03dA04) | [Exact match](https://repo.sourcify.dev/56/0x3171C50E87F67b921FCB9261E1D9fD598b03dA04) |
+| Ethereum | 22 January 2026 | [0x3171...dA04](https://etherscan.io/address/0x3171C50E87F67b921FCB9261E1D9fD598b03dA04) | [Exact match](https://repo.sourcify.dev/1/0x3171C50E87F67b921FCB9261E1D9fD598b03dA04) |
+| Polygon | 22 January 2026 | [0x3171...dA04 on Polygonscan (exact match)](https://polygonscan.com/address/0x3171C50E87F67b921FCB9261E1D9fD598b03dA04) | [Exact match](https://repo.sourcify.dev/137/0x3171C50E87F67b921FCB9261E1D9fD598b03dA04) |
+| Arbitrum One | 22 January 2026 | [0x3171...dA04](https://arbiscan.io/address/0x3171C50E87F67b921FCB9261E1D9fD598b03dA04) | [Exact match](https://repo.sourcify.dev/42161/0x3171C50E87F67b921FCB9261E1D9fD598b03dA04) |
+| Base | 22 January 2026 | [0x3171...dA04](https://basescan.org/address/0x3171C50E87F67b921FCB9261E1D9fD598b03dA04) | [Exact match](https://repo.sourcify.dev/8453/0x3171C50E87F67b921FCB9261E1D9fD598b03dA04) |
 
 ### Fee Configuration
 
-- **Fee Amount:** $3 per token on most chains ($6 on Ethereum mainnet)
+- **Fee Amount:** $3 per token, $6 on Ethereum
 - **Fee Recipient:** `0x7f0C375dc32653CA5d778835ed5dC5D34d7C97cc`
 - **Price Conversion:** Chainlink price feeds convert USD to native currency in real-time
 
@@ -218,9 +221,7 @@ npx hardhat run scripts/deploy-base.ts --network base
 
 ## Security
 
-⚠️ **Important Security Notice**
-
-This project has **NOT been audited by any third-party security firm**. The contracts have undergone internal code review, but no external audit has been performed.
+Built on OpenZeppelin Contracts v5; factory source code is verified on Sourcify; no independent audit.
 
 - **Internal Review:** See [docs/INTERNAL_REVIEW.md](./docs/INTERNAL_REVIEW.md) for findings and status
 - **Use at Your Own Risk:** Deploy and use these contracts at your own discretion
@@ -240,7 +241,7 @@ This project has **NOT been audited by any third-party security firm**. The cont
 
 ## Documentation
 
-- **[docs/INTERNAL_REVIEW.md](./docs/INTERNAL_REVIEW.md)** - Internal security review (not a third-party audit)
+- **[docs/INTERNAL_REVIEW.md](./docs/INTERNAL_REVIEW.md)** - Internal code review. Built on OpenZeppelin Contracts v5; factory source code is verified on Sourcify; no independent audit.
 - **[CHANGELOG.md](./CHANGELOG.md)** - Version history and security fixes
 - **[SETUP_ENV.md](./SETUP_ENV.md)** - Environment setup guide
 - **[ARBITRUM_DEPLOY.md](./ARBITRUM_DEPLOY.md)** - Arbitrum deployment guide
@@ -253,8 +254,11 @@ This project has **NOT been audited by any third-party security firm**. The cont
 - **Lite Paper:** https://constructor.futuremarkt.com/en/lite-paper
 - **Terms of Service:** https://constructor.futuremarkt.com/en/terms
 - **Privacy Policy:** https://constructor.futuremarkt.com/en/privacy
-- **X (Twitter):** https://x.com/fm_constructor
-- **Telegram:** https://t.me/fmweb3
+- **X:** https://x.com/fm_constructor
+- **Telegram:** https://t.me/fm_constructor
+- **Bluesky:** https://bsky.app/profile/fm-constructor.bsky.social
+- **Farcaster:** https://farcaster.xyz/fm-constructor
+- **YouTube:** https://www.youtube.com/@fm_constructor
 - **Contact:** futuremarktgroup@gmail.com
 
 ---
@@ -267,4 +271,4 @@ MIT
 
 ## Disclaimer
 
-Future Constructor is provided "as is" without warranties of any kind. The smart contracts have not been audited by third-party security firms. Users deploy and interact with these contracts at their own risk. Always conduct your own security assessment before deploying to production.
+Future Constructor is provided "as is" without warranties of any kind. Built on OpenZeppelin Contracts v5; factory source code is verified on Sourcify; no independent audit. Users deploy and interact with these contracts at their own risk. Always conduct your own security assessment before deploying to production.
