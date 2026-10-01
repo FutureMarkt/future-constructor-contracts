@@ -1,51 +1,69 @@
 # Future Constructor - Deployed Contracts
 
-## BNB Smart Chain Mainnet (Chain ID: 56)
+## Current factory
 
-### TokenFactory (Current - v2)
 Address: 0x7820C4E3C28caeaa8c729F96cF43471Ef117b852
-Deployed: January 21, 2026
-Explorer: https://bscscan.com/address/0x7820C4E3C28caeaa8c729F96cF43471Ef117b852
-Verification: ✅ Verified on BscScan, exact match on Sourcify
 
-### TokenFactory (Earlier - v1)
-Address: 0x3171C50E87F67b921FCB9261E1D9fD598b03dA04
-Deployed: January 2026
-Explorer: https://bscscan.com/address/0x3171C50E87F67b921FCB9261E1D9fD598b03dA04
-Verification: ✅ Verified on BscScan, exact match on Sourcify
-Status: Earlier deployment, replaced by v2
+There is no contract at this address on Ethereum or Polygon. Source code is an exact match on Sourcify for each deployment below. BaseScan does not show the Base deployment as verified.
+
+### BNB Smart Chain (Chain ID: 56)
+Deployed: 21 January 2026 (UTC)
+Explorer: https://bscscan.com/address/0x7820C4E3C28caeaa8c729F96cF43471Ef117b852
+Sourcify: https://repo.sourcify.dev/56/0x7820C4E3C28caeaa8c729F96cF43471Ef117b852
+
+### Arbitrum One (Chain ID: 42161)
+Deployed: 27 September 2026 (UTC)
+Explorer: https://arbiscan.io/address/0x7820C4E3C28caeaa8c729F96cF43471Ef117b852
+Sourcify: https://repo.sourcify.dev/42161/0x7820C4E3C28caeaa8c729F96cF43471Ef117b852
+
+### Base (Chain ID: 8453)
+Deployed: 27 September 2026 (UTC)
+Explorer: https://basescan.org/address/0x7820C4E3C28caeaa8c729F96cF43471Ef117b852
+Sourcify: https://repo.sourcify.dev/8453/0x7820C4E3C28caeaa8c729F96cF43471Ef117b852
 
 ---
 
-## Multi-Chain Deployments
+## Legacy factory
+
+Address: 0x3171C50E87F67b921FCB9261E1D9fD598b03dA04
+
+This is the legacy TokenFactory. It is still the factory on Ethereum and Polygon. On BNB Smart Chain, Arbitrum One, and Base it was replaced by 0x7820C4E3C28caeaa8c729F96cF43471Ef117b852. On Base it was the factory in use from January 2026 through September 2026.
+
+Source code is an exact match on Sourcify for every deployment below. Polygonscan shows an exact source match. Etherscan does not show the Ethereum deployment as verified.
+
+### BNB Smart Chain (Chain ID: 56)
+Deployed: 21 January 2026 (UTC)
+Explorer: https://bscscan.com/address/0x3171C50E87F67b921FCB9261E1D9fD598b03dA04
+Sourcify: https://repo.sourcify.dev/56/0x3171C50E87F67b921FCB9261E1D9fD598b03dA04
 
 ### Ethereum Mainnet (Chain ID: 1)
-TokenFactory: 0x3171C50E87F67b921FCB9261E1D9fD598b03dA04
+Deployed: 22 January 2026 (UTC)
 Explorer: https://etherscan.io/address/0x3171C50E87F67b921FCB9261E1D9fD598b03dA04
-Verification: ✅ Exact match on Sourcify
+Sourcify: https://repo.sourcify.dev/1/0x3171C50E87F67b921FCB9261E1D9fD598b03dA04
 
 ### Polygon Mainnet (Chain ID: 137)
-TokenFactory: 0x3171C50E87F67b921FCB9261E1D9fD598b03dA04
+Deployed: 22 January 2026 (UTC)
 Explorer: https://polygonscan.com/address/0x3171C50E87F67b921FCB9261E1D9fD598b03dA04
-Verification: ✅ Verified on Polygonscan, exact match on Sourcify
+Sourcify: https://repo.sourcify.dev/137/0x3171C50E87F67b921FCB9261E1D9fD598b03dA04
+Verification: exact match on Polygonscan and on Sourcify
 
 ### Arbitrum One (Chain ID: 42161)
-TokenFactory: 0x7820C4E3C28caeaa8c729F96cF43471Ef117b852
-Deployed: September 27, 2026
-Explorer: https://arbiscan.io/address/0x7820C4E3C28caeaa8c729F96cF43471Ef117b852
-Verification: ✅ Exact match on Sourcify
+Deployed: 22 January 2026 (UTC)
+Explorer: https://arbiscan.io/address/0x3171C50E87F67b921FCB9261E1D9fD598b03dA04
+Sourcify: https://repo.sourcify.dev/42161/0x3171C50E87F67b921FCB9261E1D9fD598b03dA04
 
 ### Base (Chain ID: 8453)
-TokenFactory: 0x7820C4E3C28caeaa8c729F96cF43471Ef117b852
-Deployed: September 27, 2026
-Explorer: https://basescan.org/address/0x7820C4E3C28caeaa8c729F96cF43471Ef117b852
-Verification: ✅ Exact match on Sourcify
+Deployed: 22 January 2026 (UTC)
+Explorer: https://basescan.org/address/0x3171C50E87F67b921FCB9261E1D9fD598b03dA04
+Sourcify: https://repo.sourcify.dev/8453/0x3171C50E87F67b921FCB9261E1D9fD598b03dA04
 
 ---
 
 ## Fee Recipient
 Address: 0x7f0C375dc32653CA5d778835ed5dC5D34d7C97cc
 Purpose: Receives token deployment fees
+
+Fees: $3 per token, $6 on Ethereum.
 
 ---
 
@@ -66,14 +84,11 @@ Purpose: Receives token deployment fees
 
 ---
 
-## Compiler & Verification
+## Compiler
 
 - Solidity: 0.8.20
 - Optimizer: Enabled (200 runs)
 - EVM Version: Shanghai
-- OpenZeppelin: 5.4.0 components (imported via 5.1.0)
+- OpenZeppelin: Contracts v5 (5.4.0 components)
 
-All deployments are verified with exact source code match on:
-- Sourcify (all chains)
-- BscScan (BNB Smart Chain)
-- Polygonscan (Polygon)
+Built on OpenZeppelin Contracts v5; factory source code is verified on Sourcify; no independent audit.

@@ -7,7 +7,7 @@
 - `TokenFactory.sol`
 - `BasicERC20.sol`
 
-**IMPORTANT:** This is an internal code review, NOT a third-party security audit. The project has not been audited by any external security firm.
+Built on OpenZeppelin Contracts v5; factory source code is verified on Sourcify; no independent audit.
 
 ---
 
@@ -252,6 +252,6 @@ Based on this internal review, the current implementation has addressed all high
 
 **Current Security Assessment:** The contracts follow security best practices and have addressed known issues from internal review.
 
-**Important Disclaimer:** This is NOT a third-party security audit. Users and developers should conduct their own security assessment and consider obtaining a professional third-party audit before using these contracts in production. No guarantees are made regarding security or correctness.
+Built on OpenZeppelin Contracts v5; factory source code is verified on Sourcify; no independent audit. No guarantees are made regarding security or correctness.
 
 **Report Issues:** If you discover any security vulnerabilities, please report them to futuremarktgroup@gmail.com
