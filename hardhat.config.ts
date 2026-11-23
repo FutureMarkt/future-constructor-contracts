@@ -7,6 +7,12 @@ import "@nomicfoundation/hardhat-ethers";
 dotenv.config();
 
 export default defineConfig({
+  mocha: {
+    timeout: 40000,
+  },
+  paths: {
+    tests: "./test",
+  },
   solidity: {
     profiles: {
       default: {
