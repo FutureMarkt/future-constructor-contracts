@@ -5,30 +5,48 @@ import * as dotenv from "dotenv";
 // Load environment variables
 dotenv.config();
 
+const shanghaiOptimizer = {
+  optimizer: {
+    enabled: true,
+    runs: 200,
+  },
+  // Explicit. Matches the deployed TokenFactory. New advanced contracts use Cancun below.
+  evmVersion: "shanghai" as const,
+};
+
+const solc20 = { version: "0.8.20", settings: shanghaiOptimizer };
+// OpenZeppelin 5.7 Bytes.sol uses MCOPY. Permit and votes therefore compile for Cancun.
+const solc28 = {
+  version: "0.8.28",
+  settings: {
+    optimizer: { enabled: true, runs: 200 },
+    evmVersion: "cancun" as const,
+  },
+};
+
+// Permit and Votes in OpenZeppelin 5.7 require solc >= 0.8.24.
+// TokenFactory, BasicERC20 and AdvancedTaxToken stay on 0.8.20 so their bytecode does not change.
+const lockedToSolc20 = {
+  "contracts/TokenFactory.sol": solc20,
+  "contracts/BasicERC20.sol": solc20,
+  "contracts/advanced/AdvancedTaxToken.sol": solc20,
+  "contracts/mocks/MockAggregator.sol": solc20,
+  "contracts/mocks/MockERC20.sol": solc20,
+  "contracts/mocks/RejectingDeployer.sol": solc20,
+  "contracts/mocks/uniswap/MockUniswapV2.sol": solc20,
+};
+
 export default defineConfig({
   plugins: [hardhatToolboxMochaEthersPlugin],
   solidity: {
     profiles: {
       default: {
-        version: "0.8.20",
-        settings: {
-          optimizer: {
-            enabled: true,
-            runs: 200,
-          },
-          // Explicit, matches solc 0.8.20 default and the deployed factories.
-          evmVersion: "shanghai",
-        },
+        compilers: [solc20, solc28],
+        overrides: lockedToSolc20,
       },
       production: {
-        version: "0.8.20",
-        settings: {
-          optimizer: {
-            enabled: true,
-            runs: 200,
-          },
-          evmVersion: "shanghai",
-        },
+        compilers: [solc20, solc28],
+        overrides: lockedToSolc20,
       },
     },
   },

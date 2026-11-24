@@ -7,7 +7,7 @@
     "test": "hardhat test",
     "lint": "solhint 'contracts/**/*.sol'",
     "lint:fix": "solhint 'contracts/**/*.sol' --fix",
-    "coverage": "hardhat test --coverage",
+    "coverage": "COVERAGE=1 hardhat test --coverage",
     "deploy:ethereum": "hardhat run scripts/deploy-ethereum.ts --network ethereum",
     "deploy:polygon": "hardhat run scripts/deploy-polygon.ts --network polygon",
     "deploy:bsc": "hardhat run scripts/deploy-bsc.ts --network bsc",

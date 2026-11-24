@@ -99,74 +99,92 @@ event AdvancedTokenCreated(
 );
 ```
 
-## Proposed factory ABI
+## Factory ABI for the frontend
 
-`future-constructor/src/abi/advancedTokenFactory.ts` still has one `feeBasisPoints` and one `feeRecipient` inside `AdvancedConfig`. That cannot express buy and sell. The factory is not implemented here. Proposed shape for the next factory change:
+The previous frontend file `future-constructor/src/abi/advancedTokenFactory.ts` has one `feeBasisPoints`. This repo now has the factory. Copy these files into the app:
 
-```solidity
-struct TaxConfig {
-    address feeRecipient;
-    uint16 buyFeeBps;
-    uint16 sellFeeBps;
-}
+- TypeScript: `contracts/advanced/abi/advancedTokenFactory.ts`
+- JSON: `contracts/advanced/abi/advancedTokenFactory.json`
 
-struct AdvancedConfig {
-    address[] distributionRecipients;
-    uint256[] distributionAmounts;
-    TaxConfig tax;
-}
-```
+`TokenConfig.initialSupply`, `AdvancedConfig.distributionAmounts` and `AdvancedConfig.cap` are whole tokens. The factory multiplies each by `10 ** decimals` once. The token stores the raw result and does not scale again. Cap `0` means no cap. Pools are not deploy arguments: the owner calls `setPool` after the pair exists.
 
-`deployAdvancedToken` would pass `TaxConfig` through to `AdvancedTaxToken`. Pools do not belong in the deploy call: the pair address exists only after the token exists. The owner marks pairs later.
+`FeatureFlags` adds `permit` and `votes` to the old five flags. Vesting is a separate call, `createVestingWallet(beneficiary, startTimestamp, durationSeconds, cliffSeconds)`.
 
-```solidity
-function setPool(address pool, bool enabled) external;
-function setExcluded(address account, bool excluded) external;
-function setFees(uint16 newBuyFeeBps, uint16 newSellFeeBps) external;
-function setFeeRecipient(address newRecipient) external;
+A votes deployment uses `AdvancedTokenVotes`, which also implements permit, because both features share one EIP-712 name. The name must be at most 31 bytes when `permit` or `votes` is set. The permit fee is charged only when the permit flag is set.
 
-event PoolUpdated(address indexed pool, bool isPool);
-event ExclusionUpdated(address indexed account, bool excluded);
-event FeesUpdated(uint16 buyFeeBps, uint16 sellFeeBps);
-event FeeRecipientUpdated(address indexed previousRecipient, address indexed newRecipient);
-event TaxCollected(address indexed from, address indexed to, uint256 fee, bool isBuy);
-```
+## Service fees
 
-`AdvancedTaxToken` constructor `initialSupply` is the raw base-unit amount. The future factory should scale whole tokens by `10 ** decimals`, the same way `BasicERC20` does. The current form sends unscaled `initialSupply` and scaled distribution amounts.
+Initial amounts come from `CMO/цены-продуктов-по-сетям.md` §2. They are constructor arguments, not a chain-id branch. The owner changes them with `setBaseFee` and `setOptionFee` (events `BaseFeeUpdated` and `OptionFeeUpdated`). Values are USD with 18 decimals.
+
+| Option | ETH | Other networks | Storage |
+| --- | ---: | ---: | --- |
+| Base deploy | $6 | $3 | `baseFeeUsdWei` |
+| Mint | $2 | $1 | `mintFeeUsdWei` |
+| Burn | $2 | $1 | `burnFeeUsdWei` |
+| Initial distribution | $2 | $1 | `distributionFeeUsdWei` |
+| Pause | $2 | $1 | `pauseFeeUsdWei` |
+| Transfer tax | $20 | $10 | `transferFeeUsdWei` |
+| Cap | $0 | $0 | no fee field |
+| Ownable2Step | $0 | $0 | no fee field |
+| Permit | not in §2 | not in §2 | `permitFeeUsdWei`, default 0 |
+| Votes | not in §2 | not in §2 | `votesFeeUsdWei`, default 0 |
+| Vesting | not in §2 | not in §2 | `vestingFeeUsdWei`, default 0 |
+
+`currentFee(flags)` converts the USD sum with the same Chainlink bounds as `TokenFactory`. If the USD sum is positive and the native result rounds to 0, the call reverts with `FeeRoundsToZero`. A zero USD sum stays free and does not read the price.
+
+The CMO row for burn is titled “for the administrator”. The CPO decision for this delivery is holder `burn` and `burnFrom` by allowance. The $2 / $1 row is the price of that holder-burn option.
+
+## Bytecode
+
+EIP-170 limit is 24,576 bytes of deployed code. One factory that embedded every token variant did not leave room, and EIP-1167 clones cannot set the immutable decimals, fees, or the 31-byte EIP-712 name. The factory therefore keeps four deployers and only makes an external call:
+
+| Contract | Deployed bytes | solc / EVM |
+| --- | ---: | --- |
+| `AdvancedToken` | 5,885 | 0.8.28 / cancun |
+| `AdvancedTokenPermit` | 7,677 | 0.8.28 / cancun |
+| `AdvancedTokenVotes` | 11,209 | 0.8.28 / cancun |
+| `TokenDeployer` | 12,040 | 0.8.28 / cancun |
+| `PermitDeployer` | 14,272 | 0.8.28 / cancun |
+| `VotesDeployer` | 19,107 | 0.8.28 / cancun |
+| `AdvancedVestingWallet` | 2,472 | 0.8.28 / cancun |
+| `VestingDeployer` | 4,081 | 0.8.28 / cancun |
+| `AdvancedTokenFactory` | 9,579 | 0.8.28 / cancun |
+| `TokenFactory` (unchanged) | 9,399 | 0.8.20 / shanghai |
+
+Permit and votes compile for Cancun because OpenZeppelin 5.7 `Bytes.sol` uses `MCOPY`. `TokenFactory` and `AdvancedTaxToken` stay on solc 0.8.20 and Shanghai.
 
 ## Decisions already recorded
 
-Owner via CEO on 23.11.2026, and the CPO on this step:
+Owner via CEO on 23.11.2026, and the CPO on the tax step and this step:
 
-- v1 options are the current form, plus Permit, Votes, and vesting. Cap and Ownable2Step are free options. Cap defaults off. Ownable2Step is in this token.
-- Tax rules are the ones implemented above. Legal review is out of scope.
-- Permit, Votes, and vesting are in v1 but not in this change. Votes and vesting should be separate modules. Vesting is a `VestingWallet` created by the future factory.
-- New contracts use OpenZeppelin 5.7.0 via the `@openzeppelin/contracts-v5.7` alias. `TokenFactory` stays on 5.4.0.
-- Service prices follow `CMO/цены-продуктов-по-сетям.md` §2. The form will be aligned later.
+- v1 options are distribution, mint, burn, pause, and tax, plus Permit, Votes, and vesting. Cap and Ownable2Step are free. Cap defaults off.
+- Tax: separate buy and sell rates, sum at most 1000 bps, rates only decrease, owner-marked pools, owner and factory excluded, wallet transfers untaxed. `setFeeRecipient` stays, with an event, and cannot be zero or the token. Pair-to-pair is one sell fee. The router is not excluded.
+- The token `initialSupply` is raw base units. Only the factory scales, and it scales once.
+- Votes is the separate `AdvancedTokenVotes` contract. Vesting is `AdvancedVestingWallet` (`VestingWalletCliff`: cliff, then linear).
+- New contracts use OpenZeppelin 5.7.0. `TokenFactory` stays on 5.4.0.
+- Service prices start from CMO §2 and are owner-configurable.
 
-## Choices this module made
+## Open points
 
-These points are not in the owner answers of 23.11 or the CPO answers for this step.
-
-1. **Fee recipient can be changed.** `AdvancedERC20` in `future-constructor` (`src/lib/tokenSource/contracts/AdvancedERC20.sol`, branch `dev`) keeps `feeRecipient` immutable. Искал в: that file, `src/abi/advancedTokenFactory.ts`, CEO brief `CEO-agent/брифы/2026-11-23-advanced-tokens-product.md` §6, CPO answers for this step. Не нашёл a rule for changing the recipient after deploy. This token lets the owner call `setFeeRecipient`. The recipient cannot be the zero address or the token itself.
-2. **Pair to pair is a sell.** Искал в: the same files and the CPO tax rules. Не нашёл a rule for a transfer from one marked pair to another. This token charges the sell rate once.
-3. **`initialSupply` is raw base units.** `BasicERC20` and the downloadable `AdvancedERC20` multiply a whole-token amount by `10 ** decimals`. Искал в: those two contracts and `advancedTokenFactory.ts` (`uint256 initialSupply`, no scaling comment). Не нашёл which unit this standalone token should take. The constructor takes raw units. The future factory should scale whole tokens before it calls the constructor, the same way a caller of `BasicERC20` would pass an already decided amount only if that token did not scale itself. Do not scale twice.
-4. **The AMM router is not excluded.** The CEO brief §6.2 recommends excluding the pool and the router. The CPO answer for this step excludes the token factory and the owner, and marks pools. Искал в: brief §6.2 and the CPO tax rules. Не нашёл an instruction to exclude the router. A Uniswap V2 router does not hold the tokens, so a sell still works without that exclusion.
+1. **Permit, votes, and vesting prices.** Искал в: `CMO/цены-продуктов-по-сетям.md` §2 and the summary table. Не нашёл a price for Permit, Votes, or vesting. Those three storage fees default to 0. The owner can set them.
+2. **Vesting in the same transaction as the token.** Искал в: the CPO request (“created by the factory”) and the deploy ABI, which has no vesting fields. Не нашёл whether the buyer pays for vesting inside `deployAdvancedToken`. Vesting is `createVestingWallet`.
+3. **Permit inside the votes variant.** Искал в: the CPO request to keep Votes as a separate module where possible. Не нашёл whether that module must also expose permit. `AdvancedTokenVotes` includes permit because both features need one EIP-712 domain. The permit flag still controls only the permit fee.
+4. **`renounceOwnership` while paused.** Искал в: the CPO answers for this delivery and CEO brief §6. The 07.10 draft recommended blocking renounce while paused. Не нашёл an owner decision. Pause does not block renounce.
 
 ## Known behavior of the existing factory
 
-`TokenFactory.currentFee()` uses integer division. A non-zero `feeUsdWei` becomes 0 native wei when `feeUsdWei * 1e18 < normalizedPrice`. At the highest allowed price this starts below `1e7` wei-USD. The production fee of $3 does not hit it. The pending test in `test/TokenFactory.test.ts` records the current behavior. It is not changed here.
+`TokenFactory.currentFee()` uses integer division. A non-zero `feeUsdWei` becomes 0 native wei when `feeUsdWei * 1e18 < normalizedPrice`. At the highest allowed price this starts below `1e7` wei-USD. The production fee of $3 does not hit it. The pending test in `test/TokenFactory.test.ts` records the current behavior. It is not changed here. `AdvancedTokenFactory` reverts instead of returning that 0.
 
 ## Implementation status
 
-- Done in this change: `AdvancedTaxToken` and the Uniswap V2 mock tests.
-- Not done: factory, distribution, mint/burn, pause, cap, Permit, Votes, vesting, UI.
+- Done: tax token, advanced token (distribution, mint, cap, holder burn, pause, tax, Ownable2Step), permit variant, votes variant, vesting wallet, factory, deployers, tests.
+- Not done: the app UI, testnet deployment, and prices for permit, votes, and vesting.
 
 ## Technical requirements
 
 - Existing factory: Solidity `0.8.20`, optimizer 200 runs, `evmVersion: shanghai`, OpenZeppelin **5.4.0**.
-- Tax token: OpenZeppelin **5.7.0**, same compiler settings, so the deployed factory bytecode is not rebuilt.
-- Factory init code plus the token must stay within 24,576 bytes when the factory is written.
+- Advanced contracts: Solidity `0.8.28`, optimizer 200 runs, `evmVersion: cancun`, OpenZeppelin **5.7.0**.
+- Each deployed contract and each deployer stays within 24,576 bytes. The factory does not embed token creation code.
 
 ## Security considerations
 
