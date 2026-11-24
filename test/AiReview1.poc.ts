@@ -326,9 +326,10 @@ describe("AI review 1 proof of concept", function () {
     expect(await token.decimals()).to.equal(255);
     expect(await token.totalSupply()).to.equal(1n);
 
+    const tokenArtifact = await ethers.getContractFactory("AdvancedToken");
     await expect(
       ethers.deployContract("AdvancedToken", [rawInit(owner.address, factory.address, { decimals: 31 })]),
-    ).to.be.revertedWithCustomError(await ethers.getContractFactory("AdvancedToken"), "DecimalsOutOfRange");
+    ).to.be.revertedWithCustomError(tokenArtifact, "DecimalsOutOfRange");
   });
 
   it("AR1-08 a start of zero makes the whole vesting balance releasable now", async function () {

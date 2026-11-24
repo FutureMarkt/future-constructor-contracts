@@ -253,9 +253,10 @@ describe("Advanced token modules", function () {
       "ERC2612InvalidSigner",
     );
 
+    const permitArtifact = await ethers.getContractFactory("AdvancedTokenPermit");
     await expect(
       ethers.deployContract("AdvancedTokenPermit", [init(owner.address, factory.address, { name: "a".repeat(32) })]),
-    ).to.be.revertedWithCustomError(await ethers.getContractFactory("AdvancedTokenPermit"), "StringTooLong");
+    ).to.be.revertedWithCustomError(permitArtifact, "StringTooLong");
     const maxName = await ethers.deployContract("AdvancedTokenPermit", [init(owner.address, factory.address, { name: "a".repeat(31) })]);
     expect(await maxName.name()).to.equal("a".repeat(31));
   });
