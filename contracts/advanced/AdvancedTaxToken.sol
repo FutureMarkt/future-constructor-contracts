@@ -11,7 +11,8 @@ import {Ownable2Step} from "@openzeppelin/contracts-v5.7/access/Ownable2Step.sol
  * @dev Wallet-to-wallet transfers are not taxed. OpenZeppelin Contracts 5.7.0.
  *      The existing TokenFactory is unchanged and still compiles against 5.4.0.
  *
- *      `initialSupply` is the raw base-unit amount (already scaled by decimals).
+ *      `initialSupply` is raw base units. This contract does not scale it.
+ *      Only AdvancedTokenFactory multiplies a whole-token amount by `10 ** decimals`, and it does that once.
  */
 contract AdvancedTaxToken is ERC20, Ownable2Step {
     /// @notice Hard ceiling: buy bps + sell bps. Not configurable.
@@ -42,6 +43,7 @@ contract AdvancedTaxToken is ERC20, Ownable2Step {
 
     /**
      * @param initialSupply Raw base units minted to `initialOwner`. Zero mints nothing.
+     *        This contract does not multiply by `10 ** decimals`. AdvancedTokenFactory scales once.
      * @param factory_ Address excluded together with the owner (the future factory passes itself).
      * @param buyFeeBps_ Tax when tokens leave a marked pool, in basis points.
      * @param sellFeeBps_ Tax when tokens enter a marked pool, in basis points.
