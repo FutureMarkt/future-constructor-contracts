@@ -169,8 +169,8 @@ async function deployTaxToken() {
 }
 
 describe("AI review 2 findings", function () {
-  it("AR2-01 renounceOwnership on a vesting wallet permanently locks ERC-20", async function () {
-    const { factory, owner, alice } = await deploySystem();
+  it("AR2-01 renounceOwnership on a vesting wallet reverts and release still pays the beneficiary", async function () {
+    const { factory, owner, alice, bob } = await deploySystem();
     const now = BigInt(await networkHelpers.time.latest());
     const start = now + 10n;
     const duration = 1_000n;
@@ -185,38 +185,44 @@ describe("AI review 2 findings", function () {
     await networkHelpers.time.increaseTo(start + duration);
 
     expect(await wallet["releasable(address)"](await token.getAddress())).to.equal(1_000n);
-    await wallet.connect(alice).renounceOwnership();
-    expect(await wallet.owner()).to.equal(ethers.ZeroAddress);
+    await expect(wallet.connect(alice).renounceOwnership()).to.be.revertedWithCustomError(wallet, "RenounceDisabled");
+    expect(await wallet.owner()).to.equal(alice.address);
 
-    await expect(wallet["release(address)"](await token.getAddress())).to.be.revertedWithCustomError(
-      token,
-      "ERC20InvalidReceiver",
-    );
-    expect(await token.balanceOf(walletAddress)).to.equal(1_000n);
-    expect(await token.balanceOf(alice.address)).to.equal(0n);
+    await wallet.connect(alice)["release(address)"](await token.getAddress());
+    expect(await token.balanceOf(alice.address)).to.equal(1_000n);
+    expect(await token.balanceOf(walletAddress)).to.equal(0n);
+
+    await wallet.connect(alice).transferOwnership(bob.address);
+    expect(await wallet.owner()).to.equal(alice.address);
+    await wallet.connect(bob).acceptOwnership();
+    expect(await wallet.owner()).to.equal(bob.address);
   });
 
-  it("AR2-02 startTimestamp 0 passes VestingAlreadyFinished and is almost fully releasable", async function () {
+  it("AR2-02 startTimestamp 0 means now, and a past start reverts", async function () {
     const { factory, owner, alice } = await deploySystem();
     const now = BigInt(await networkHelpers.time.latest());
-    // start=0 is not finished as long as duration is still in the future.
     const duration = now + 365n * 24n * 3600n;
     const tx = await factory.createVestingWallet(alice.address, 0, duration, 0, maxFee);
-    const walletAddress = createdWallet(factory, (await tx.wait())!);
+    const receipt = await tx.wait();
+    const walletAddress = createdWallet(factory, receipt!);
     const wallet = await ethers.getContractAt("AdvancedVestingWallet", walletAddress);
+    const block = await ethers.provider.getBlock(receipt!.blockNumber);
+    expect(await wallet.start()).to.equal(block!.timestamp);
 
     const token = await ethers.deployContract("AdvancedToken", [
       rawInit(owner.address, await factory.getAddress(), { initialSupply: 1_000n }),
     ]);
     await token.transfer(walletAddress, 1_000n);
+    expect(await wallet["releasable(address)"](await token.getAddress())).to.equal(0n);
 
-    const releasable = await wallet["releasable(address)"](await token.getAddress());
-    expect(releasable).to.be.greaterThan(900n);
-    await wallet.connect(alice)["release(address)"](await token.getAddress());
-    expect(await token.balanceOf(alice.address)).to.equal(releasable);
+    await expect(factory.createVestingWallet(alice.address, 1, duration, 0, maxFee)).to.be.revertedWithCustomError(
+      factory,
+      "StartInPast",
+    );
+    await factory.createVestingWallet(alice.address, 0, 1_000, 0, maxFee);
   });
 
-  it("AR2-03 a non-owner add-liquidity transfer is taxed as a sell", async function () {
+  it("AR2-03 accepted: a non-owner add-liquidity transfer is taxed as a sell", async function () {
     const { token, owner, feeRecipient, alice } = await deployTaxToken();
     const quote = await ethers.deployContract("MockERC20");
     const uniFactory = await ethers.deployContract("MockUniswapV2Factory");
@@ -256,7 +262,7 @@ describe("AI review 2 findings", function () {
     expect(await token.balanceOf(pair)).to.equal(pairBefore + lpTokens - tax);
   });
 
-  it("AR2-03b a transfer out of a marked pool (LP-style removal) is taxed as a buy", async function () {
+  it("AR2-03b accepted: a transfer out of a marked pool is taxed as a buy", async function () {
     const { token, feeRecipient, alice, bob } = await deployTaxToken();
     await token.setPool(bob.address, true);
     const amount = ethers.parseEther("100");
@@ -270,7 +276,7 @@ describe("AI review 2 findings", function () {
     expect(await token.balanceOf(feeRecipient.address)).to.equal(feesBefore + tax);
   });
 
-  it("AR2-04 an unmarked second pair is a tax-free market", async function () {
+  it("AR2-04 accepted: an unmarked second pair is a tax-free market until setPool", async function () {
     const { token, owner, feeRecipient, alice } = await deployTaxToken();
     const quoteA = await ethers.deployContract("MockERC20");
     const quoteB = await ethers.deployContract("MockERC20");
@@ -295,21 +301,23 @@ describe("AI review 2 findings", function () {
     expect(await token.balanceOf(feeRecipient.address)).to.equal(feesBefore + taxed);
   });
 
-  it("AR2-05 a stale sequencer round still quotes a fee", async function () {
+  it("AR2-05 an incomplete sequencer round reverts and a complete up round still quotes", async function () {
     const sequencer = await ethers.deployContract("MockAggregator", [0, 0]);
     const now = BigInt(await networkHelpers.time.latest());
     await sequencer.setStartedAt(now - 7200n);
     await sequencer.setUpdatedAt(1n);
     await sequencer.setAnsweredInRound(0);
-    expect((await sequencer.latestRoundData())[0]).to.equal(1n);
-    expect((await sequencer.latestRoundData())[4]).to.equal(0n);
 
-    const { factory } = await deploySystem(ethFees, await sequencer.getAddress());
+    const { factory, feed } = await deploySystem(ethFees, await sequencer.getAddress());
+    await expect(factory.currentFee(noFlags)).to.be.revertedWithCustomError(factory, "StaleRound");
+
+    await sequencer.setAnsweredInRound(1);
+    await feed.setUpdatedAt(now);
     const quote = await factory.currentFee(noFlags);
     expect(quote).to.equal(ethers.parseEther("0.003"));
   });
 
-  it("AR2-06 a Uniswap V2 K-check that uses the quoted amountIn reverts on a taxed sell", async function () {
+  it("AR2-06 acknowledged: a quoted-amountIn K-check reverts on a taxed sell", async function () {
     const { token, owner, alice } = await deployTaxToken();
     const quote = await ethers.deployContract("MockERC20");
     const uniFactory = await ethers.deployContract("MockUniswapV2Factory");
@@ -351,7 +359,7 @@ describe("AI review 2 findings", function () {
     }
   });
 
-  it("AR2-07 ERC-20 sent to the factory cannot be recovered", async function () {
+  it("AR2-07 acknowledged: ERC-20 sent to the factory cannot be recovered", async function () {
     const { factory, owner } = await deploySystem();
     const token = await ethers.deployContract("AdvancedToken", [
       rawInit(owner.address, await factory.getAddress(), { initialSupply: 500n }),
@@ -364,18 +372,15 @@ describe("AI review 2 findings", function () {
     expect(names.some((name) => /withdraw|rescue|sweep/i.test(name))).to.equal(false);
   });
 
-  it("AR2-08 renouncing a deployer before setFactory bricks it", async function () {
+  it("AR2-08 renounce before setFactory reverts and the owner can still bind the factory", async function () {
     const [owner, alice] = await ethers.getSigners();
     const deployer = await ethers.deployContract("TokenDeployer", [owner.address]);
+    await expect(deployer.renounceOwnership()).to.be.revertedWithCustomError(deployer, "RenounceBeforeFactorySet");
+    await deployer.setFactory(alice.address);
+    expect(await deployer.factory()).to.equal(alice.address);
     await deployer.renounceOwnership();
-    await expect(deployer.setFactory(alice.address)).to.be.revertedWithCustomError(
-      deployer,
-      "OwnableUnauthorizedAccount",
-    );
-    expect(await deployer.factory()).to.equal(ethers.ZeroAddress);
-    await expect(
-      deployer.deploy(rawInit(owner.address, owner.address, { initialSupply: 1n }), ethers.id("salt")),
-    ).to.be.revertedWithCustomError(deployer, "OnlyFactory");
+    expect(await deployer.owner()).to.equal(ethers.ZeroAddress);
+    expect(await deployer.factory()).to.equal(alice.address);
   });
 
   describe("invariants", function () {

@@ -110,9 +110,9 @@ The previous frontend file `future-constructor/src/abi/advancedTokenFactory.ts` 
 
 `FeatureFlags` adds `permit` and `votes` to the old five flags. Vesting is a separate call, `createVestingWallet(beneficiary, startTimestamp, durationSeconds, cliffSeconds, maxFee)`. Both payable entry points take `maxFee` in native wei. If the quoted fee is above `maxFee`, the call reverts with `FeeAboveMax` and nothing is charged. A surplus `msg.value` is still refunded.
 
-The constructor takes `sequencerUptimeFeed`. The zero address disables the L2 sequencer check (L1). A non-zero address must be a contract. A positive fee then reverts when the feed answer is not 0 (sequencer down), when `startedAt` is 0 or in the future, or when the sequencer has been up for at most `SEQUENCER_GRACE_PERIOD` (1 hour, `<=`, the Chainlink consumer rule). `TokenFactory` is unchanged and does not read a sequencer feed.
+The constructor takes `sequencerUptimeFeed`. The zero address disables the L2 sequencer check (L1). A non-zero address must be a contract. A positive fee then reads every `latestRoundData` field. `startedAt == 0`, `updatedAt == 0`, or either timestamp in the future reverts `InvalidSequencerRound`. `answeredInRound < roundId` reverts `StaleRound`. `answer != 0` reverts `SequencerDown`. A recovery within `SEQUENCER_GRACE_PERIOD` (1 hour, `<=`, the Chainlink consumer rule) reverts `SequencerGracePeriod`. `updatedAt` is not capped by `MAX_PRICE_AGE`: this feed updates when the sequencer status changes, and a one-hour age would reject a healthy "up" round. `TokenFactory` is unchanged and does not read a sequencer feed.
 
-`createVestingWallet` reverts with `VestingAlreadyFinished` when `startTimestamp + durationSeconds <= block.timestamp`. A duration of 0 with a future start is still a timelock. Mint and burn are not taxed, including when the other side is a marked pool. `renounceOwnership` on a token or on this factory reverts with `RenounceWhilePaused` while that contract is paused.
+`createVestingWallet` treats `startTimestamp == 0` as `block.timestamp`. A start that is already in the past (`0 < start < block.timestamp`) reverts `StartInPast`. After that substitution, `VestingAlreadyFinished` still reverts when `start + duration <= block.timestamp`, so a zero duration that begins now is rejected and a zero duration with a future start stays a timelock. The vesting wallet cannot `renounceOwnership` (`RenounceDisabled`); the beneficiary moves only through Ownable2Step. A deployer cannot renounce before `setFactory` (`RenounceBeforeFactorySet`). Mint and burn are not taxed, including when the other side is a marked pool. `renounceOwnership` on a token or on this factory reverts with `RenounceWhilePaused` while that contract is paused.
 
 A votes deployment uses `AdvancedTokenVotes`, which also implements permit, because both features share one EIP-712 name. The name must be at most 31 bytes when `permit` or `votes` is set. The permit fee is charged only when the permit flag is set.
 
@@ -157,12 +157,12 @@ EIP-170 limit is 24,576 bytes of deployed code. One factory that embedded every 
 | `AdvancedToken` | 5,976 | 0.8.28 / cancun |
 | `AdvancedTokenPermit` | 7,768 | 0.8.28 / cancun |
 | `AdvancedTokenVotes` | 11,300 | 0.8.28 / cancun |
-| `TokenDeployer` | 12,368 | 0.8.28 / cancun |
-| `PermitDeployer` | 14,600 | 0.8.28 / cancun |
-| `VotesDeployer` | 19,435 | 0.8.28 / cancun |
-| `AdvancedVestingWallet` | 2,715 | 0.8.28 / cancun |
-| `VestingDeployer` | 4,557 | 0.8.28 / cancun |
-| `AdvancedTokenFactory` | 10,189 | 0.8.28 / cancun |
+| `TokenDeployer` | 12,421 | 0.8.28 / cancun |
+| `PermitDeployer` | 14,653 | 0.8.28 / cancun |
+| `VotesDeployer` | 19,488 | 0.8.28 / cancun |
+| `AdvancedVestingWallet` | 2,723 | 0.8.28 / cancun |
+| `VestingDeployer` | 4,618 | 0.8.28 / cancun |
+| `AdvancedTokenFactory` | 10,326 | 0.8.28 / cancun |
 | `AdvancedTaxToken` | 4,423 | 0.8.20 / shanghai |
 | `TokenFactory` (unchanged) | 9,399 | 0.8.20 / shanghai |
 
@@ -185,6 +185,15 @@ Owner via CEO on 23.11.2026, and the CPO on the tax step and this step:
 1. **Permit, votes, and vesting prices.** Искал в: `CMO/цены-продуктов-по-сетям.md` §2 and the summary table. Не нашёл a price for Permit, Votes, or vesting. Those three storage fees default to 0. The owner can set them.
 2. **Vesting in the same transaction as the token.** Искал в: the CPO request (“created by the factory”) and the deploy ABI, which has no vesting fields. Не нашёл whether the buyer pays for vesting inside `deployAdvancedToken`. Vesting is `createVestingWallet`.
 3. **Permit inside the votes variant.** Искал в: the CPO request to keep Votes as a separate module where possible. Не нашёл whether that module must also expose permit. `AdvancedTokenVotes` includes permit because both features need one EIP-712 domain. The permit flag still controls only the permit fee.
+
+## Known behaviour
+
+Tax applies only when a transfer touches an address the owner has marked with `setPool`. That is the product model.
+
+- A non-owner who adds liquidity transfers tokens into the marked pair. That transfer is a sell. Removing liquidity transfers tokens out of the pair. That transfer is a buy. The owner and the factory are excluded, so the owner's own seed of the pair is not taxed. The router is not excluded: excluding it would turn the sell tax off.
+- A second pair that the owner has not marked is a wallet-to-wallet transfer. It is not taxed. The owner calls `setPool` for every live pair. The contracts do not watch an AMM factory and do not mark pairs by themselves.
+- The mock router prices a sell from the tokens the pair actually received. `UniswapV2Router02.swapExactTokensForTokens` prices the quoted `amountIn` and then reverts `K` on a taxed sell. The token still delivers `value - fee` and does not revert. An integrator uses a supporting-fee route.
+- The factory has no `receive` and no ERC-20 rescue. A direct native transfer reverts. An ERC-20 sent to the factory stays there. A rescue function is not part of this version.
 
 ## Known behavior of the existing factory
 

@@ -1,5 +1,6 @@
 // Frontend copy of AdvancedTokenFactory. Whole-token amounts are scaled once by the factory.
 // deployAdvancedToken and createVestingWallet take maxFee in native wei.
+// createVestingWallet: startTimestamp 0 means block.timestamp. A past start reverts StartInPast.
 // sequencerUptimeFeed is address(0) on L1.
 export const advancedTokenFactoryAbi = [
   {
@@ -288,6 +289,17 @@ export const advancedTokenFactoryAbi = [
   {
     "inputs": [],
     "name": "StaleRound",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint64",
+        "name": "startTimestamp",
+        "type": "uint64"
+      }
+    ],
+    "name": "StartInPast",
     "type": "error"
   },
   {

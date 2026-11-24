@@ -162,6 +162,7 @@ contract AdvancedTokenFactory is Ownable2Step, Pausable, ReentrancyGuard {
     error UnknownOption(bytes32 option);
     error RenounceWhilePaused();
     error VestingAlreadyFinished(uint64 startTimestamp, uint64 durationSeconds);
+    error StartInPast(uint64 startTimestamp);
 
     constructor(
         address aggregator_,
@@ -228,17 +229,23 @@ contract AdvancedTokenFactory is Ownable2Step, Pausable, ReentrancyGuard {
         uint256 maxFee
     ) external payable whenNotPaused nonReentrant returns (address wallet) {
         if (beneficiary == address(0)) revert ZeroAddress();
-        if (uint256(startTimestamp) + uint256(durationSeconds) <= block.timestamp) {
-            revert VestingAlreadyFinished(startTimestamp, durationSeconds);
+        uint64 start = startTimestamp;
+        if (start == 0) {
+            start = uint64(block.timestamp);
+        } else if (start < block.timestamp) {
+            revert StartInPast(start);
+        }
+        if (uint256(start) + uint256(durationSeconds) <= block.timestamp) {
+            revert VestingAlreadyFinished(start, durationSeconds);
         }
         uint256 requiredFee = currentVestingFee();
         if (requiredFee > maxFee) revert FeeAboveMax(requiredFee, maxFee);
         if (msg.value < requiredFee) revert InsufficientFee(requiredFee, msg.value);
         bytes32 salt = _salt(msg.sender, "vesting", "vest");
         _nonces[msg.sender]++;
-        wallet = vestingDeployer.deploy(beneficiary, startTimestamp, durationSeconds, cliffSeconds, salt);
+        wallet = vestingDeployer.deploy(beneficiary, start, durationSeconds, cliffSeconds, salt);
         _takePayment(requiredFee);
-        emit VestingWalletCreated(msg.sender, wallet, beneficiary, startTimestamp, durationSeconds, cliffSeconds, requiredFee);
+        emit VestingWalletCreated(msg.sender, wallet, beneficiary, start, durationSeconds, cliffSeconds, requiredFee);
     }
 
     function currentFee(FeatureFlags calldata flags) public view returns (uint256) {
@@ -342,12 +349,19 @@ contract AdvancedTokenFactory is Ownable2Step, Pausable, ReentrancyGuard {
         return nativeFee;
     }
 
-    /// @dev `answer == 0` means the sequencer is up. Any other answer is treated as down.
-    ///      Grace uses `<=`, matching the Chainlink consumer example: exactly one hour is still inside the window.
+    /// @dev Chainlink sequencer consumer: `startedAt == 0` is an invalid round, `answer != 0` means down,
+    ///      and a recovery newer than `SEQUENCER_GRACE_PERIOD` is rejected (`<=`, so exactly one hour is still inside).
+    ///      `roundId`, `updatedAt` and `answeredInRound` are checked too: an incomplete round reverts, and a zero or
+    ///      future `updatedAt` is an invalid round. `updatedAt` is not aged by `MAX_PRICE_AGE`. This feed heartbeats
+    ///      when the sequencer status changes, and a one-hour cap would reject a healthy "up" round.
     function _checkSequencer() internal view {
         if (address(sequencerUptimeFeed) == address(0)) return;
-        (, int256 answer, uint256 startedAt,,) = sequencerUptimeFeed.latestRoundData();
-        if (startedAt == 0 || block.timestamp < startedAt) revert InvalidSequencerRound();
+        (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound) =
+            sequencerUptimeFeed.latestRoundData();
+        if (startedAt == 0 || updatedAt == 0 || block.timestamp < startedAt || block.timestamp < updatedAt) {
+            revert InvalidSequencerRound();
+        }
+        if (answeredInRound < roundId) revert StaleRound();
         if (answer != 0) revert SequencerDown();
         if (block.timestamp - startedAt <= SEQUENCER_GRACE_PERIOD) revert SequencerGracePeriod(startedAt);
     }
