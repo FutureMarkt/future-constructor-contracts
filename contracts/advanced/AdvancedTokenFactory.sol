@@ -73,6 +73,8 @@ contract AdvancedTokenFactory is Ownable2Step, Pausable, ReentrancyGuard {
     }
 
     uint256 public constant MAX_PRICE_AGE = 1 hours;
+    /// @notice After an L2 sequencer recovers, quotes stay disabled for this long. Chainlink uses `<=`.
+    uint256 public constant SEQUENCER_GRACE_PERIOD = 1 hours;
     uint256 private constant PRICE_SCALE = 1e18;
     uint256 private constant MIN_NORMALIZED_PRICE = 1e16;
     uint256 private constant MAX_NORMALIZED_PRICE = 1e25;
@@ -91,6 +93,8 @@ contract AdvancedTokenFactory is Ownable2Step, Pausable, ReentrancyGuard {
     bytes32 public constant OPTION_VESTING = "vesting";
 
     AggregatorV3Interface public immutable priceFeed;
+    /// @notice Chainlink L2 sequencer uptime feed. The zero address disables the check (L1).
+    AggregatorV3Interface public immutable sequencerUptimeFeed;
     address payable public feeRecipient;
     TokenDeployer public immutable tokenDeployer;
     PermitDeployer public immutable permitDeployer;
@@ -143,7 +147,11 @@ contract AdvancedTokenFactory is Ownable2Step, Pausable, ReentrancyGuard {
     error BadDistribution();
     error TaxConfigMismatch();
     error InsufficientFee(uint256 required, uint256 sent);
+    error FeeAboveMax(uint256 required, uint256 maxFee);
     error FeeRoundsToZero(uint256 feeUsdWei, uint256 normalizedPrice);
+    error SequencerDown();
+    error InvalidSequencerRound();
+    error SequencerGracePeriod(uint256 startedAt);
     error InvalidPrice();
     error StaleRound();
     error InvalidTimestamp();
@@ -152,17 +160,25 @@ contract AdvancedTokenFactory is Ownable2Step, Pausable, ReentrancyGuard {
     error FeeTransferFailed();
     error RefundFailedBoth();
     error UnknownOption(bytes32 option);
+    error RenounceWhilePaused();
+    error VestingAlreadyFinished(uint64 startTimestamp, uint64 durationSeconds);
 
-    constructor(address aggregator_, address payable feeRecipient_, FeeSchedule memory fees, Deployers memory deployers)
-        Ownable(msg.sender)
-    {
+    constructor(
+        address aggregator_,
+        address sequencerUptimeFeed_,
+        address payable feeRecipient_,
+        FeeSchedule memory fees,
+        Deployers memory deployers
+    ) Ownable(msg.sender) {
         if (aggregator_ == address(0) || feeRecipient_ == address(0)) revert ZeroAddress();
+        if (sequencerUptimeFeed_ != address(0)) _requireContract(sequencerUptimeFeed_);
         _requireContract(deployers.token);
         _requireContract(deployers.permit);
         _requireContract(deployers.votes);
         _requireContract(deployers.vesting);
 
         priceFeed = AggregatorV3Interface(aggregator_);
+        sequencerUptimeFeed = AggregatorV3Interface(sequencerUptimeFeed_);
         feeRecipient = feeRecipient_;
         tokenDeployer = TokenDeployer(deployers.token);
         permitDeployer = PermitDeployer(deployers.permit);
@@ -180,14 +196,14 @@ contract AdvancedTokenFactory is Ownable2Step, Pausable, ReentrancyGuard {
         vestingFeeUsdWei = fees.vestingFeeUsdWei;
     }
 
-    function deployAdvancedToken(TokenConfig calldata config, FeatureFlags calldata flags, AdvancedConfig calldata advanced)
-        external
-        payable
-        whenNotPaused
-        nonReentrant
-        returns (address token)
-    {
+    function deployAdvancedToken(
+        TokenConfig calldata config,
+        FeatureFlags calldata flags,
+        AdvancedConfig calldata advanced,
+        uint256 maxFee
+    ) external payable whenNotPaused nonReentrant returns (address token) {
         uint256 requiredFee = currentFee(flags);
+        if (requiredFee > maxFee) revert FeeAboveMax(requiredFee, maxFee);
         if (msg.value < requiredFee) revert InsufficientFee(requiredFee, msg.value);
 
         (AdvancedTokenInit memory init, uint256 rawSupply) = _buildInit(config, flags, advanced);
@@ -204,15 +220,19 @@ contract AdvancedTokenFactory is Ownable2Step, Pausable, ReentrancyGuard {
         emit AdvancedTokenCreated(msg.sender, token, config.name, config.symbol, config.decimals, rawSupply, requiredFee);
     }
 
-    function createVestingWallet(address beneficiary, uint64 startTimestamp, uint64 durationSeconds, uint64 cliffSeconds)
-        external
-        payable
-        whenNotPaused
-        nonReentrant
-        returns (address wallet)
-    {
+    function createVestingWallet(
+        address beneficiary,
+        uint64 startTimestamp,
+        uint64 durationSeconds,
+        uint64 cliffSeconds,
+        uint256 maxFee
+    ) external payable whenNotPaused nonReentrant returns (address wallet) {
         if (beneficiary == address(0)) revert ZeroAddress();
+        if (uint256(startTimestamp) + uint256(durationSeconds) <= block.timestamp) {
+            revert VestingAlreadyFinished(startTimestamp, durationSeconds);
+        }
         uint256 requiredFee = currentVestingFee();
+        if (requiredFee > maxFee) revert FeeAboveMax(requiredFee, maxFee);
         if (msg.value < requiredFee) revert InsufficientFee(requiredFee, msg.value);
         bytes32 salt = _salt(msg.sender, "vesting", "vest");
         _nonces[msg.sender]++;
@@ -286,6 +306,12 @@ contract AdvancedTokenFactory is Ownable2Step, Pausable, ReentrancyGuard {
         _unpause();
     }
 
+    /// @notice Renounce is rejected while the factory is paused, so `unpause` stays reachable.
+    function renounceOwnership() public override onlyOwner {
+        if (paused()) revert RenounceWhilePaused();
+        super.renounceOwnership();
+    }
+
     function _usdFor(FeatureFlags calldata flags) internal view returns (uint256 fee) {
         fee = baseFeeUsdWei;
         if (flags.mint) fee += mintFeeUsdWei;
@@ -298,8 +324,10 @@ contract AdvancedTokenFactory is Ownable2Step, Pausable, ReentrancyGuard {
     }
 
     /// @dev A positive USD fee that rounds to 0 native wei reverts. It is not treated as a free deploy.
+    ///      A zero USD fee does not read the price or the sequencer feed.
     function _quoteNative(uint256 feeUsd) internal view returns (uint256) {
         if (feeUsd == 0) return 0;
+        _checkSequencer();
         (uint80 roundId, int256 price,, uint256 updatedAt, uint80 answeredInRound) = priceFeed.latestRoundData();
         if (price <= 0) revert InvalidPrice();
         if (answeredInRound < roundId) revert StaleRound();
@@ -312,6 +340,16 @@ contract AdvancedTokenFactory is Ownable2Step, Pausable, ReentrancyGuard {
         uint256 nativeFee = (feeUsd * PRICE_SCALE) / normalized;
         if (nativeFee == 0) revert FeeRoundsToZero(feeUsd, normalized);
         return nativeFee;
+    }
+
+    /// @dev `answer == 0` means the sequencer is up. Any other answer is treated as down.
+    ///      Grace uses `<=`, matching the Chainlink consumer example: exactly one hour is still inside the window.
+    function _checkSequencer() internal view {
+        if (address(sequencerUptimeFeed) == address(0)) return;
+        (, int256 answer, uint256 startedAt,,) = sequencerUptimeFeed.latestRoundData();
+        if (startedAt == 0 || block.timestamp < startedAt) revert InvalidSequencerRound();
+        if (answer != 0) revert SequencerDown();
+        if (block.timestamp - startedAt <= SEQUENCER_GRACE_PERIOD) revert SequencerGracePeriod(startedAt);
     }
 
     function _buildInit(TokenConfig calldata config, FeatureFlags calldata flags, AdvancedConfig calldata advanced)

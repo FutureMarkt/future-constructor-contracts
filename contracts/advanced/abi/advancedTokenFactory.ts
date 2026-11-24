@@ -1,10 +1,17 @@
 // Frontend copy of AdvancedTokenFactory. Whole-token amounts are scaled once by the factory.
+// deployAdvancedToken and createVestingWallet take maxFee in native wei.
+// sequencerUptimeFeed is address(0) on L1.
 export const advancedTokenFactoryAbi = [
   {
     "inputs": [
       {
         "internalType": "address",
         "name": "aggregator_",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "sequencerUptimeFeed_",
         "type": "address"
       },
       {
@@ -119,6 +126,22 @@ export const advancedTokenFactoryAbi = [
     "inputs": [
       {
         "internalType": "uint256",
+        "name": "required",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "maxFee",
+        "type": "uint256"
+      }
+    ],
+    "name": "FeeAboveMax",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
         "name": "feeUsdWei",
         "type": "uint256"
       },
@@ -160,6 +183,11 @@ export const advancedTokenFactoryAbi = [
   {
     "inputs": [],
     "name": "InvalidPrice",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidSequencerRound",
     "type": "error"
   },
   {
@@ -238,6 +266,27 @@ export const advancedTokenFactoryAbi = [
   },
   {
     "inputs": [],
+    "name": "RenounceWhilePaused",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "SequencerDown",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "startedAt",
+        "type": "uint256"
+      }
+    ],
+    "name": "SequencerGracePeriod",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "StaleRound",
     "type": "error"
   },
@@ -260,6 +309,22 @@ export const advancedTokenFactoryAbi = [
       }
     ],
     "name": "UnknownOption",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint64",
+        "name": "startTimestamp",
+        "type": "uint64"
+      },
+      {
+        "internalType": "uint64",
+        "name": "durationSeconds",
+        "type": "uint64"
+      }
+    ],
+    "name": "VestingAlreadyFinished",
     "type": "error"
   },
   {
@@ -661,6 +726,19 @@ export const advancedTokenFactoryAbi = [
   },
   {
     "inputs": [],
+    "name": "SEQUENCER_GRACE_PERIOD",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "acceptOwnership",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -713,6 +791,11 @@ export const advancedTokenFactoryAbi = [
         "internalType": "uint64",
         "name": "cliffSeconds",
         "type": "uint64"
+      },
+      {
+        "internalType": "uint256",
+        "name": "maxFee",
+        "type": "uint256"
       }
     ],
     "name": "createVestingWallet",
@@ -914,6 +997,11 @@ export const advancedTokenFactoryAbi = [
         "internalType": "struct AdvancedTokenFactory.AdvancedConfig",
         "name": "advanced",
         "type": "tuple"
+      },
+      {
+        "internalType": "uint256",
+        "name": "maxFee",
+        "type": "uint256"
       }
     ],
     "name": "deployAdvancedToken",
@@ -1088,6 +1176,19 @@ export const advancedTokenFactoryAbi = [
     "name": "renounceOwnership",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "sequencerUptimeFeed",
+    "outputs": [
+      {
+        "internalType": "contract AggregatorV3Interface",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {

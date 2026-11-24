@@ -11,6 +11,7 @@ contract MockAggregator is AggregatorV3Interface {
     uint8 private immutable _decimals;
     int256 private _price;
     uint256 private _updatedAt;
+    uint256 private _startedAt;
     uint80 private _roundId;
     uint80 private _answeredInRound;
 
@@ -18,6 +19,7 @@ contract MockAggregator is AggregatorV3Interface {
         _decimals = decimals_;
         _price = initialPrice;
         _updatedAt = block.timestamp;
+        _startedAt = block.timestamp;
         _roundId = 1;
         _answeredInRound = 1;
     }
@@ -40,7 +42,7 @@ contract MockAggregator is AggregatorV3Interface {
         override
         returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
     {
-        return (roundId_, _price, _updatedAt, _updatedAt, _answeredInRound);
+        return (roundId_, _price, _startedAt, _updatedAt, _answeredInRound);
     }
 
     function latestRoundData()
@@ -49,7 +51,7 @@ contract MockAggregator is AggregatorV3Interface {
         override
         returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
     {
-        return (_roundId, _price, _updatedAt, _updatedAt, _answeredInRound);
+        return (_roundId, _price, _startedAt, _updatedAt, _answeredInRound);
     }
 
     function setPrice(int256 newPrice) external {
@@ -61,6 +63,10 @@ contract MockAggregator is AggregatorV3Interface {
 
     function setUpdatedAt(uint256 updatedAt_) external {
         _updatedAt = updatedAt_;
+    }
+
+    function setStartedAt(uint256 startedAt_) external {
+        _startedAt = startedAt_;
     }
 
     function setAnsweredInRound(uint80 answeredInRound_) external {
