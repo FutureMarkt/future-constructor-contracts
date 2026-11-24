@@ -96,9 +96,10 @@ jobs:
             --json slither-report.json
 
       # Official Aderyn binaries were withdrawn (installer exits 1).
-      # Build the last tagged source instead.
+      # Tag aderyn-v0.6.8 still has #![feature] in aderyn_driver, so it
+      # builds only on nightly. The feature itself has been stable since 1.98.
       - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@nightly
 
       - name: Cache Cargo
         uses: Swatinem/rust-cache@v2
