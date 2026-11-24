@@ -28,10 +28,14 @@ Based on the product specification (CPO §4.0.1) and the existing AdvancedTokenF
    - Uses Pausable pattern from OpenZeppelin
 
 5. **Transfer Fee** (`transferFee`)
-   - Optional fee on each transfer (0-1000 basis points = 0-10%)
-   - Fee recipient address
-   - **High risk feature** - requires careful implementation
-   - Considerations: DEX compatibility, honeypot scanners, legal review
+   - Optional fee on transfers. The frontend ABI has a single `feeBasisPoints` (`uint16`) and one `feeRecipient`.
+   - The create form currently allows 1–1000 bps (0.01%–10%) on every transfer, with no exemption list.
+   - **Owner decision for the next implementation step (tax module), 24.11.2026:**
+     - the tax ceiling is hardcoded in the contract;
+     - buy tax + sell tax together are at most 10%;
+     - the pool and the factory are exempt.
+   - That decision is not representable by the current ABI (no separate buy/sell rates, no exemption list). The ABI and the `/create/advanced` form have to change together with the contract.
+   - Still a high-risk feature for DEX pools and scanner flags. Legal review is not recorded in the repos.
 
 ### Factory Configuration
 
@@ -102,14 +106,11 @@ event AdvancedTokenCreated(
 
 1. **Состав v1**: Делать текущие опции UI (распределение, admin mint, admin burn с любого адреса, пауза, комиссия на перевод) или рекомендованный набор из плана (mint + cap, burn холдером, пауза с защитой, Ownable2Step, без tax)?
 
-2. **Transfer fee (tax)**: Включать ли в v1? Если да, нужны:
-   - Исключения для пула и роутера
-   - Жёсткий потолок и только понижение ставки
-   - Юридическая консультация
+2. **Transfer fee (tax).** Часть решения уже есть (см. выше): потолок в коде, buy+sell ≤ 10% суммарно, исключения для пула и фабрики. Искал в: CPO §4.0.1, CMO §2, ABI `advancedTokenFactory.ts`, страница `/create/advanced`, бриф CEO. Не нашёл: отдельные поля buy/sell и список исключений в ABI; кто задаёт адреса пула и фабрики (деплоер, владелец токена, константа); можно ли ставку только понижать после деплоя; нужна ли юридическая проверка до включения опции.
 
 3. **Permit, Votes, vesting**: Включать в эту версию или позже?
 
-4. **Версия OpenZeppelin**: Использовать 5.7.x (рекомендация из OZ-UPGRADE) или 5.6.x (последняя с записью аудита)?
+4. **Версия OpenZeppelin для новых контрактов.** Текущая фабрика зафиксирована на **5.4.0** (это версия прод-байткода и точный пин из Product/OZ-UPGRADE-2026-10.md; 5.7.0 меняет слот ReentrancyGuard и разойдётся с уже верифицированным байткодом). Для расширенной фабрики документ рекомендует 5.7.x и явный `evmVersion: cancun`. Искал в: Product/OZ-UPGRADE-2026-10.md. Не нашёл отдельного «да» владельца на 5.7.0 против 5.6.x.
 
 5. **Cap для minting**: Является ли cap обязательным или опциональным? По умолчанию включён или выключен?
 
@@ -130,19 +131,16 @@ This directory contains only the README with requirements. Actual implementation
 
 ## Technical Requirements
 
-- Solidity version: `0.8.20` (or as specified in final requirements)
-- OpenZeppelin version: `5.1.0` (may be updated to 5.7.x per requirements)
-- evmVersion: `shanghai` (explicit in hardhat config)
-- Optimizer: enabled, 200 runs
-- Gas limit: consider factory + token init code must fit in 24,576 bytes
+- Existing factory: Solidity `0.8.20`, optimizer 200 runs, `evmVersion: shanghai` (explicit, same as the solc 0.8.20 default), OpenZeppelin **5.4.0** pinned.
+- Advanced factory, when implemented: OpenZeppelin **5.7.x** and an explicit `evmVersion` (document recommends `cancun`) in a separate compiler profile, so the already deployed factory bytecode is not rebuilt.
+- Factory init code plus the token must stay within 24,576 bytes.
 
 ## Security Considerations
 
-- Full test coverage required before mainnet deployment
-- Multiple rounds of AI audit required (per CEO brief)
-- No mainnet deployment without owner approval
-- Never use word "audited" without independent professional audit
-- Transfer fee feature requires extra scrutiny and legal review
+- Full test coverage is required before any mainnet deployment.
+- The CEO brief asks for several rounds of AI review before a UI release. That review is not an independent third-party review.
+- No mainnet deployment without an explicit owner approval.
+- The transfer-fee feature needs the hardcoded ceiling, pool and factory exemptions, and a legal check that is not in the repos yet.
 
 ## References
 

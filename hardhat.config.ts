@@ -1,18 +1,12 @@
+import hardhatToolboxMochaEthersPlugin from "@nomicfoundation/hardhat-toolbox-mocha-ethers";
 import { configVariable, defineConfig } from "hardhat/config";
 import * as dotenv from "dotenv";
-import "@nomicfoundation/hardhat-ethers";
-// import "@nomicfoundation/hardhat-verify"; // Temporarily disabled due to compatibility issues
 
 // Load environment variables
 dotenv.config();
 
 export default defineConfig({
-  mocha: {
-    timeout: 40000,
-  },
-  paths: {
-    tests: "./test",
-  },
+  plugins: [hardhatToolboxMochaEthersPlugin],
   solidity: {
     profiles: {
       default: {
@@ -22,6 +16,8 @@ export default defineConfig({
             enabled: true,
             runs: 200,
           },
+          // Explicit, matches solc 0.8.20 default and the deployed factories.
+          evmVersion: "shanghai",
         },
       },
       production: {
@@ -31,6 +27,7 @@ export default defineConfig({
             enabled: true,
             runs: 200,
           },
+          evmVersion: "shanghai",
         },
       },
     },
