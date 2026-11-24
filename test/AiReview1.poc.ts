@@ -372,6 +372,7 @@ describe("AI review 1 regressions", function () {
 
   it("AR1-07 AdvancedTaxToken rejects decimals above 30", async function () {
     const [owner, factory, feeRecipient] = await ethers.getSigners();
+    const taxToken = await ethers.getContractFactory("AdvancedTaxToken");
     await expect(
       ethers.deployContract("AdvancedTaxToken", [
         "Wide",
@@ -384,7 +385,7 @@ describe("AI review 1 regressions", function () {
         0,
         0,
       ]),
-    ).to.be.revertedWithCustomError(await ethers.getContractFactory("AdvancedTaxToken"), "DecimalsOutOfRange");
+    ).to.be.revertedWithCustomError(taxToken, "DecimalsOutOfRange");
 
     const token = await ethers.deployContract("AdvancedTaxToken", [
       "Wide",
@@ -400,9 +401,10 @@ describe("AI review 1 regressions", function () {
     expect(await token.decimals()).to.equal(30);
     expect(await token.totalSupply()).to.equal(1n);
 
+    const core = await ethers.getContractFactory("AdvancedToken");
     await expect(
       ethers.deployContract("AdvancedToken", [rawInit(owner.address, factory.address, { decimals: 31 })]),
-    ).to.be.revertedWithCustomError(await ethers.getContractFactory("AdvancedToken"), "DecimalsOutOfRange");
+    ).to.be.revertedWithCustomError(core, "DecimalsOutOfRange");
   });
 
   it("AR1-08 an already finished vesting schedule cannot be created", async function () {
