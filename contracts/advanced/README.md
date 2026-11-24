@@ -118,7 +118,7 @@ A votes deployment uses `AdvancedTokenVotes`, which also implements permit, beca
 
 ## Service fees
 
-Initial amounts come from `CMO/цены-продуктов-по-сетям.md` §2. They are constructor arguments, not a chain-id branch. The owner changes them with `setBaseFee` and `setOptionFee` (events `BaseFeeUpdated` and `OptionFeeUpdated`). Values are USD with 18 decimals.
+Initial amounts come from `CMO/цены-продуктов-по-сетям.md` §2, plus the owner decision of 24.11.2026 for Permit, Votes, and vesting (решение владельца 24.11.2026). They are constructor arguments, not a chain-id branch. The owner changes them with `setBaseFee` and `setOptionFee` (events `BaseFeeUpdated` and `OptionFeeUpdated`). Values are USD with 18 decimals.
 
 | Option | ETH | Other networks | Storage |
 | --- | ---: | ---: | --- |
@@ -130,9 +130,13 @@ Initial amounts come from `CMO/цены-продуктов-по-сетям.md` �
 | Transfer tax | $20 | $10 | `transferFeeUsdWei` |
 | Cap | $0 | $0 | no fee field |
 | Ownable2Step | $0 | $0 | no fee field |
-| Permit | not in §2 | not in §2 | `permitFeeUsdWei`, default 0 |
-| Votes | not in §2 | not in §2 | `votesFeeUsdWei`, default 0 |
-| Vesting | not in §2 | not in §2 | `vestingFeeUsdWei`, default 0 |
+| Permit | $2 | $1 | `permitFeeUsdWei` |
+| Votes | $2 | $1 | `votesFeeUsdWei` |
+| Vesting (`createVestingWallet`) | $2 | $1 | `vestingFeeUsdWei` |
+
+Permit, Votes, and vesting use the same add-on as mint, burn, distribution, and pause. Решение владельца 24.11.2026. `setOptionFee` still replaces any of those three. Vesting is not part of `currentFee(flags)`: `createVestingWallet` quotes `currentVestingFee()`.
+
+At a $2000 native price the constructor schedule quotes: Ethereum base $6 = 0.003 native, all seven flags $38 = 0.019 native, vesting $2 = 0.001 native. Other networks: base $3 = 0.0015 native, all seven flags $19 = 0.0095 native, vesting $1 = 0.0005 native.
 
 `currentFee(flags)` converts the USD sum with the same Chainlink bounds as `TokenFactory`. If the USD sum is positive and the native result rounds to 0, the call reverts with `FeeRoundsToZero`. A zero USD sum stays free and does not read the price.
 
@@ -177,14 +181,13 @@ Owner via CEO on 23.11.2026, and the CPO on the tax step and this step:
 - The token `initialSupply` is raw base units. Only the factory scales, and it scales once.
 - Votes is the separate `AdvancedTokenVotes` contract. Vesting is `AdvancedVestingWallet` (`VestingWalletCliff`: cliff, then linear) with Ownable2Step.
 - New contracts use OpenZeppelin 5.7.0. `TokenFactory` stays on 5.4.0.
-- Service prices start from CMO §2 and are owner-configurable.
+- Service prices start from CMO §2 and are owner-configurable. Решение владельца 24.11.2026: Permit, Votes, and vesting start at +$2 on Ethereum and +$1 on other networks, the same add-on as mint. `setOptionFee` still changes them.
 - AI review #1: renounce is rejected while the token or the factory is paused. Mint and burn are untaxed. Decimals above 30 revert on the tax token too. A finished vesting schedule cannot be created. `maxFee` caps the native fee of a deploy. The new factory can take an L2 sequencer feed. Deployers are Ownable2Step.
 
 ## Open points
 
-1. **Permit, votes, and vesting prices.** Искал в: `CMO/цены-продуктов-по-сетям.md` §2 and the summary table. Не нашёл a price for Permit, Votes, or vesting. Those three storage fees default to 0. The owner can set them.
-2. **Vesting in the same transaction as the token.** Искал в: the CPO request (“created by the factory”) and the deploy ABI, which has no vesting fields. Не нашёл whether the buyer pays for vesting inside `deployAdvancedToken`. Vesting is `createVestingWallet`.
-3. **Permit inside the votes variant.** Искал в: the CPO request to keep Votes as a separate module where possible. Не нашёл whether that module must also expose permit. `AdvancedTokenVotes` includes permit because both features need one EIP-712 domain. The permit flag still controls only the permit fee.
+1. **Vesting in the same transaction as the token.** Искал в: the CPO request (“created by the factory”) and the deploy ABI, which has no vesting fields. Не нашёл whether the buyer pays for vesting inside `deployAdvancedToken`. Vesting is `createVestingWallet`.
+2. **Permit inside the votes variant.** Искал в: the CPO request to keep Votes as a separate module where possible. Не нашёл whether that module must also expose permit. `AdvancedTokenVotes` includes permit because both features need one EIP-712 domain. The permit flag still controls only the permit fee.
 
 ## Known behaviour
 
@@ -202,7 +205,7 @@ Tax applies only when a transfer touches an address the owner has marked with `s
 ## Implementation status
 
 - Done: tax token, advanced token (distribution, mint, cap, holder burn, pause, tax, Ownable2Step), permit variant, votes variant, vesting wallet, factory, deployers, tests.
-- Not done: the app UI, testnet deployment, and prices for permit, votes, and vesting.
+- Not done: the app UI and testnet deployment. Permit, Votes, and vesting now have starting prices (решение владельца 24.11.2026).
 
 ## Technical requirements
 
