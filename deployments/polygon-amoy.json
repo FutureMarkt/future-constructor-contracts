@@ -1,0 +1,254 @@
+{
+  "network": "polygon-amoy",
+  "title": "Polygon Amoy",
+  "chainId": 80002,
+  "nativeSymbol": "POL",
+  "contractsCommit": "5fb7fed88e31618955b341ccf70639079759946d",
+  "note": "AdvancedTokenFactory bytecode matches 5fb7fed. The price feed is FixedPriceAggregator, deployed only on chain id 80002. Chainlink publishes no POL/USD feed on Amoy. The first setFactory attempt used a gas limit below the Amoy estimate and reverted out of gas; the successful setFactory transactions are the ones recorded here.",
+  "deployer": "0x8A8D159DdF5FcE044192Ddd720D2EF4a4459Eb05",
+  "feeRecipient": "0x8A8D159DdF5FcE044192Ddd720D2EF4a4459Eb05",
+  "feeSchedule": "other",
+  "feesUsdWei": {
+    "baseFeeUsdWei": "3000000000000000000",
+    "mintFeeUsdWei": "1000000000000000000",
+    "burnFeeUsdWei": "1000000000000000000",
+    "distributionFeeUsdWei": "1000000000000000000",
+    "pauseFeeUsdWei": "1000000000000000000",
+    "transferFeeUsdWei": "10000000000000000000",
+    "permitFeeUsdWei": "1000000000000000000",
+    "votesFeeUsdWei": "1000000000000000000",
+    "vestingFeeUsdWei": "1000000000000000000"
+  },
+  "priceFeed": {
+    "kind": "FixedPriceAggregator",
+    "address": "0x2370A5fd4afa4f2424bb1C1c90393a167D488d35",
+    "pair": "POL / USD",
+    "decimals": 8,
+    "answer": "7677000",
+    "priceUsd": "0.07677",
+    "source": "https://api.coingecko.com/api/v3/simple/price?ids=polygon-ecosystem-token&vs_currencies=usd&include_last_updated_at=true",
+    "sourceTime": "2026-11-26T17:23:44.000Z",
+    "fetchedAt": "2026-11-26T17:24:48.072Z",
+    "crossCheck": "Kraken POLUSD last 0.076850000 at 2026-11-26T17:24:48.072Z (https://api.kraken.com/0/public/Ticker?pair=POLUSD)",
+    "description": "POL / USD"
+  },
+  "sequencerUptimeFeed": "0x0000000000000000000000000000000000000000",
+  "sequencerNote": "Chainlink publishes no L2 sequencer uptime feed for Polygon Amoy. The factory treats address(0) as the disabled check.",
+  "mockAggregator": {
+    "contract": "contracts/mocks/FixedPriceAggregator.sol:FixedPriceAggregator",
+    "address": "0x2370A5fd4afa4f2424bb1C1c90393a167D488d35",
+    "description": "POL / USD",
+    "price": "7677000"
+  },
+  "contracts": {
+    "tokenDeployer": "0xB5DF6da2f4BFdd9b7141659807f742B50a132264",
+    "permitDeployer": "0x644cf7f123287d6EE260dc459178596cd2dD2621",
+    "votesDeployer": "0x372cD839b943bb72e314B10744f138b526df9044",
+    "vestingDeployer": "0x58b77312FA3Df4c84776a1943CfD4ec752D4d508",
+    "factory": "0xa75332F2e91755AeBFBE0d955563fCF3a352b384",
+    "fixedPriceAggregator": "0x2370A5fd4afa4f2424bb1C1c90393a167D488d35",
+    "receipts": {
+      "fixedPriceAggregator": {
+        "hash": "0x0831990e58899d3d05b414ed277e6a4d96ceb38d2dbbe8e99e8f64e971a2e9d2",
+        "blockNumber": 53891153,
+        "gasUsed": "244454"
+      },
+      "tokenDeployer": {
+        "hash": "0x9f310885466cf43c5f3e2ebb101012909715bba2adfe0d5036a7b65c92445fde",
+        "blockNumber": 53891159,
+        "gasUsed": "2769179"
+      },
+      "permitDeployer": {
+        "hash": "0xcaf723912222a01ad311f266f880c2b64121ea7d41641adcafc2832569fe685e",
+        "blockNumber": 53891163,
+        "gasUsed": "3249211"
+      },
+      "votesDeployer": {
+        "hash": "0x88526601ee07cd90f376350bda2fe0438f9a202f96a605ec75cf3f35e2e49f9e",
+        "blockNumber": 53891168,
+        "gasUsed": "4294482"
+      },
+      "vestingDeployer": {
+        "hash": "0x913a0163c33e7283815c91632bbdf2b5a2462513184a40655acf0c16b26735b3",
+        "blockNumber": 53891172,
+        "gasUsed": "1086421"
+      },
+      "factory": {
+        "hash": "0x02bf00fbfd9ef64028f95a7aeef0e351317f8386c55fde1a58934d4c2be8c5f3",
+        "blockNumber": 53891177,
+        "gasUsed": "2603554"
+      },
+      "setFactoryToken": {
+        "hash": "0x82728e8b8154c815382e4f92224fabb89d1875fd5dce129c8fe5c3ea02eaa619",
+        "blockNumber": 53891282,
+        "gasUsed": "54096"
+      },
+      "setFactoryPermit": {
+        "hash": "0x6716aa6542263730398b2ba757fc02a48ec94f1b2606c1446f6efa9e5395da13",
+        "blockNumber": 53891311,
+        "gasUsed": "54096"
+      },
+      "setFactoryVotes": {
+        "hash": "0x021d3a067e5c3b8661905a1fcbe7b87d424c992362bd17a22df9ed4d0036cb78",
+        "blockNumber": 53891315,
+        "gasUsed": "54096"
+      },
+      "setFactoryVesting": {
+        "hash": "0x656da9342c8e4246f924fe348ff614ed0b1b93d4477dc230ad1cbe6bc3e880ff",
+        "blockNumber": 53891320,
+        "gasUsed": "54118"
+      }
+    }
+  },
+  "feeReadback": {
+    "storage": {
+      "baseFeeUsdWei": "3000000000000000000",
+      "mintFeeUsdWei": "1000000000000000000",
+      "burnFeeUsdWei": "1000000000000000000",
+      "distributionFeeUsdWei": "1000000000000000000",
+      "pauseFeeUsdWei": "1000000000000000000",
+      "transferFeeUsdWei": "10000000000000000000",
+      "permitFeeUsdWei": "1000000000000000000",
+      "votesFeeUsdWei": "1000000000000000000",
+      "vestingFeeUsdWei": "1000000000000000000"
+    },
+    "flags": {
+      "base": {
+        "usdWei": "3000000000000000000",
+        "nativeWei": "39077764751856193825",
+        "expectedNativeWei": "39077764751856193825",
+        "match": true
+      },
+      "initialDistribution": {
+        "usdWei": "4000000000000000000",
+        "nativeWei": "52103686335808258434",
+        "expectedNativeWei": "52103686335808258434",
+        "match": true
+      },
+      "mint": {
+        "usdWei": "4000000000000000000",
+        "nativeWei": "52103686335808258434",
+        "expectedNativeWei": "52103686335808258434",
+        "match": true
+      },
+      "burn": {
+        "usdWei": "4000000000000000000",
+        "nativeWei": "52103686335808258434",
+        "expectedNativeWei": "52103686335808258434",
+        "match": true
+      },
+      "pause": {
+        "usdWei": "4000000000000000000",
+        "nativeWei": "52103686335808258434",
+        "expectedNativeWei": "52103686335808258434",
+        "match": true
+      },
+      "transferFee": {
+        "usdWei": "13000000000000000000",
+        "nativeWei": "169336980591376839911",
+        "expectedNativeWei": "169336980591376839911",
+        "match": true
+      },
+      "permit": {
+        "usdWei": "4000000000000000000",
+        "nativeWei": "52103686335808258434",
+        "expectedNativeWei": "52103686335808258434",
+        "match": true
+      },
+      "votes": {
+        "usdWei": "4000000000000000000",
+        "nativeWei": "52103686335808258434",
+        "expectedNativeWei": "52103686335808258434",
+        "match": true
+      },
+      "allSevenFlags": {
+        "usdWei": "19000000000000000000",
+        "nativeWei": "247492510095089227562",
+        "expectedNativeWei": "247492510095089227562",
+        "match": true
+      }
+    },
+    "vesting": {
+      "usdWei": "1000000000000000000",
+      "nativeWei": "13025921583952064608",
+      "expectedNativeWei": "13025921583952064608",
+      "match": true
+    }
+  },
+  "balanceBeforeWei": "1000000000000000000",
+  "balanceAfterWei": "201404765919250056",
+  "maxFeePerGas": "55914077459",
+  "maxPriorityFeePerGas": "25000000000",
+  "feeNote": "The Amoy RPC minimum tip is 25 gwei. With a 30 gwei base fee, a 30 gwei max fee leaves a zero tip and is rejected before it enters the mempool. maxFeePerGas is base fee plus that 25 gwei minimum.",
+  "frontendEnv": "NEXT_PUBLIC_ADVANCED_FACTORY_AMOY",
+  "explorer": {
+    "factory": "https://amoy.polygonscan.com/address/0xa75332F2e91755AeBFBE0d955563fCF3a352b384",
+    "tokenDeployer": "https://amoy.polygonscan.com/address/0xB5DF6da2f4BFdd9b7141659807f742B50a132264",
+    "permitDeployer": "https://amoy.polygonscan.com/address/0x644cf7f123287d6EE260dc459178596cd2dD2621",
+    "votesDeployer": "https://amoy.polygonscan.com/address/0x372cD839b943bb72e314B10744f138b526df9044",
+    "vestingDeployer": "https://amoy.polygonscan.com/address/0x58b77312FA3Df4c84776a1943CfD4ec752D4d508",
+    "fixedPriceAggregator": "https://amoy.polygonscan.com/address/0x2370A5fd4afa4f2424bb1C1c90393a167D488d35"
+  },
+  "sourceVerification": {
+    "attempted": true,
+    "provider": "sourcify",
+    "etherscan": "not used"
+  },
+  "deployedAt": "2026-11-26T17:27:41.099Z",
+  "sourcify": [
+    {
+      "contract": "TokenDeployer",
+      "address": "0xB5DF6da2f4BFdd9b7141659807f742B50a132264",
+      "status": "full",
+      "match": "exact_match",
+      "repoUrl": "https://repo.sourcify.dev/contracts/full_match/80002/0xB5DF6da2f4BFdd9b7141659807f742B50a132264",
+      "apiUrl": "https://sourcify.dev/server/v2/contract/80002/0xB5DF6da2f4BFdd9b7141659807f742B50a132264",
+      "message": "verified on Sourcify (full match, runtime exact_match, creation exact_match)"
+    },
+    {
+      "contract": "PermitDeployer",
+      "address": "0x644cf7f123287d6EE260dc459178596cd2dD2621",
+      "status": "full",
+      "match": "exact_match",
+      "repoUrl": "https://repo.sourcify.dev/contracts/full_match/80002/0x644cf7f123287d6EE260dc459178596cd2dD2621",
+      "apiUrl": "https://sourcify.dev/server/v2/contract/80002/0x644cf7f123287d6EE260dc459178596cd2dD2621",
+      "message": "verified on Sourcify (full match, runtime exact_match, creation exact_match)"
+    },
+    {
+      "contract": "VotesDeployer",
+      "address": "0x372cD839b943bb72e314B10744f138b526df9044",
+      "status": "full",
+      "match": "exact_match",
+      "repoUrl": "https://repo.sourcify.dev/contracts/full_match/80002/0x372cD839b943bb72e314B10744f138b526df9044",
+      "apiUrl": "https://sourcify.dev/server/v2/contract/80002/0x372cD839b943bb72e314B10744f138b526df9044",
+      "message": "verified on Sourcify (full match, runtime exact_match, creation exact_match)"
+    },
+    {
+      "contract": "VestingDeployer",
+      "address": "0x58b77312FA3Df4c84776a1943CfD4ec752D4d508",
+      "status": "full",
+      "match": "exact_match",
+      "repoUrl": "https://repo.sourcify.dev/contracts/full_match/80002/0x58b77312FA3Df4c84776a1943CfD4ec752D4d508",
+      "apiUrl": "https://sourcify.dev/server/v2/contract/80002/0x58b77312FA3Df4c84776a1943CfD4ec752D4d508",
+      "message": "verified on Sourcify (full match, runtime exact_match, creation exact_match)"
+    },
+    {
+      "contract": "AdvancedTokenFactory",
+      "address": "0xa75332F2e91755AeBFBE0d955563fCF3a352b384",
+      "status": "full",
+      "match": "exact_match",
+      "repoUrl": "https://repo.sourcify.dev/contracts/full_match/80002/0xa75332F2e91755AeBFBE0d955563fCF3a352b384",
+      "apiUrl": "https://sourcify.dev/server/v2/contract/80002/0xa75332F2e91755AeBFBE0d955563fCF3a352b384",
+      "message": "verified on Sourcify (full match, runtime exact_match, creation exact_match)"
+    },
+    {
+      "contract": "FixedPriceAggregator",
+      "address": "0x2370A5fd4afa4f2424bb1C1c90393a167D488d35",
+      "status": "full",
+      "match": "exact_match",
+      "repoUrl": "https://repo.sourcify.dev/contracts/full_match/80002/0x2370A5fd4afa4f2424bb1C1c90393a167D488d35",
+      "apiUrl": "https://sourcify.dev/server/v2/contract/80002/0x2370A5fd4afa4f2424bb1C1c90393a167D488d35",
+      "message": "verified on Sourcify (full match, runtime exact_match, creation exact_match)"
+    }
+  ]
+}

@@ -234,8 +234,7 @@ const NETWORKS: Record<TestnetName, Testnet> = {
     explorer: "https://amoy.polygonscan.com",
     frontendEnv: "NEXT_PUBLIC_ADVANCED_FACTORY_AMOY",
     blockedReason:
-      "docs.chain.link lists no POL/USD or MATIC/USD feed on Amoy. The list has ETH/USD (0xF0d50568e3A7e8259E16663972b11910F89BD8e7), which is not the native token, so it would price POL as ETH. " +
-      "The POL/USD address cited by docs.polygon.technology (0x001382149eBa3441043c1c66972b4772963f5D43) has bytecode but description(), decimals() and latestRoundData() revert, and its EIP-1967 implementation slot is empty. The factory constructor rejects a zero price feed, so this network is not deployed.",
+      "Amoy is deployed only by scripts/deploy-amoy-mock-feed.ts, which exits unless the chain id is 80002 and deploys FixedPriceAggregator there. This shared script does not broadcast Amoy and does not deploy the mock.",
   },
   "arbitrum-sepolia": {
     key: "arbitrum-sepolia",
@@ -349,7 +348,8 @@ function contractsCommit(): string {
   const changed = execSync(`git diff --name-only ${CONTRACTS_COMMIT} -- contracts`, { encoding: "utf8" })
     .split("\n")
     .map((line) => line.trim())
-    .filter((line) => line.endsWith(".sol"));
+    .filter((line) => line.endsWith(".sol"))
+    .filter((line) => line !== "contracts/mocks/FixedPriceAggregator.sol");
   if (changed.length > 0) {
     throw new Error(`contract sources differ from bytecode commit ${CONTRACTS_COMMIT}: ${changed.join(", ")}`);
   }

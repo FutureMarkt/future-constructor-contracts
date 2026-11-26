@@ -230,8 +230,56 @@
     "vestingDeployer": "https://sepolia.arbiscan.io/address/0x372cD839b943bb72e314B10744f138b526df9044"
   },
   "sourceVerification": {
-    "attempted": false,
-    "reason": "No explorer API key is configured (ETHERSCAN_API_KEY, ETHERSCAN_V2_API_KEY, BSCSCAN_API_KEY, POLYGONSCAN_API_KEY, ARBISCAN_API_KEY, BASESCAN_API_KEY are unset)."
+    "attempted": true,
+    "provider": "sourcify",
+    "etherscan": "not used"
   },
-  "deployedAt": "2026-11-26T17:12:02.938Z"
+  "deployedAt": "2026-11-26T17:12:02.938Z",
+  "sourcify": [
+    {
+      "contract": "TokenDeployer",
+      "address": "0x2370A5fd4afa4f2424bb1C1c90393a167D488d35",
+      "status": "full",
+      "match": "exact_match",
+      "repoUrl": "https://repo.sourcify.dev/contracts/full_match/421614/0x2370A5fd4afa4f2424bb1C1c90393a167D488d35",
+      "apiUrl": "https://sourcify.dev/server/v2/contract/421614/0x2370A5fd4afa4f2424bb1C1c90393a167D488d35",
+      "message": "verified on Sourcify (full match, runtime exact_match, creation exact_match)"
+    },
+    {
+      "contract": "PermitDeployer",
+      "address": "0xB5DF6da2f4BFdd9b7141659807f742B50a132264",
+      "status": "full",
+      "match": "exact_match",
+      "repoUrl": "https://repo.sourcify.dev/contracts/full_match/421614/0xB5DF6da2f4BFdd9b7141659807f742B50a132264",
+      "apiUrl": "https://sourcify.dev/server/v2/contract/421614/0xB5DF6da2f4BFdd9b7141659807f742B50a132264",
+      "message": "verified on Sourcify (full match, runtime exact_match, creation exact_match)"
+    },
+    {
+      "contract": "VotesDeployer",
+      "address": "0x644cf7f123287d6EE260dc459178596cd2dD2621",
+      "status": "full",
+      "match": "exact_match",
+      "repoUrl": "https://repo.sourcify.dev/contracts/full_match/421614/0x644cf7f123287d6EE260dc459178596cd2dD2621",
+      "apiUrl": "https://sourcify.dev/server/v2/contract/421614/0x644cf7f123287d6EE260dc459178596cd2dD2621",
+      "message": "verified on Sourcify (full match, runtime exact_match, creation exact_match)"
+    },
+    {
+      "contract": "VestingDeployer",
+      "address": "0x372cD839b943bb72e314B10744f138b526df9044",
+      "status": "full",
+      "match": "exact_match",
+      "repoUrl": "https://repo.sourcify.dev/contracts/full_match/421614/0x372cD839b943bb72e314B10744f138b526df9044",
+      "apiUrl": "https://sourcify.dev/server/v2/contract/421614/0x372cD839b943bb72e314B10744f138b526df9044",
+      "message": "verified on Sourcify (full match, runtime exact_match, creation exact_match)"
+    },
+    {
+      "contract": "AdvancedTokenFactory",
+      "address": "0x58b77312FA3Df4c84776a1943CfD4ec752D4d508",
+      "status": "full",
+      "match": "exact_match",
+      "repoUrl": "https://repo.sourcify.dev/contracts/full_match/421614/0x58b77312FA3Df4c84776a1943CfD4ec752D4d508",
+      "apiUrl": "https://sourcify.dev/server/v2/contract/421614/0x58b77312FA3Df4c84776a1943CfD4ec752D4d508",
+      "message": "verified on Sourcify (full match, runtime exact_match, creation exact_match)"
+    }
+  ]
 }
