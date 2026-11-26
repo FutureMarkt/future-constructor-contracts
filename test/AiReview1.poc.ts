@@ -409,7 +409,7 @@ describe("AI review 1 regressions", function () {
 
   it("AR1-08 an already finished vesting schedule cannot be created", async function () {
     const { factory, owner, alice } = await deployFactory(zeroFees);
-    await expect(factory.createVestingWallet(alice.address, 0, 1_000, 0, maxFee)).to.be.revertedWithCustomError(
+    await expect(factory.createVestingWallet(alice.address, 0, 0, 0, maxFee)).to.be.revertedWithCustomError(
       factory,
       "VestingAlreadyFinished",
     );

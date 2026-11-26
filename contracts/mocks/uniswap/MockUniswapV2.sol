@@ -141,6 +141,8 @@ contract MockUniswapV2Router {
         bool inIsToken0 = path[0] == pool.token0();
         uint256 reserveIn = inIsToken0 ? reserve0 : reserve1;
         uint256 reserveOut = inIsToken0 ? reserve1 : reserve0;
+        // Supporting-fee path: the pair received `amountIn` minus tax. UniswapV2Router02 uses the quoted
+        // `amountIn` in getAmountOut and then reverts K. Integrators need a supporting-fee route.
         uint256 actualIn = IMockERC20(path[0]).balanceOf(pair) - reserveIn;
         amountOut = getAmountOut(actualIn, reserveIn, reserveOut);
         if (inIsToken0) {

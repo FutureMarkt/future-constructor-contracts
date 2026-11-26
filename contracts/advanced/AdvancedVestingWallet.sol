@@ -12,13 +12,21 @@ import {VestingWalletCliff} from "@openzeppelin/contracts-v5.7/finance/VestingWa
  * @dev Before `cliff()` nothing is releasable. From the cliff onward the linear schedule applies,
  *      measured from `start()`, so the amount accrued during the cliff becomes releasable at the cliff.
  *      The beneficiary is the owner. Replacing that owner takes two steps: `release` keeps paying the
- *      current owner until the pending owner calls `acceptOwnership`.
+ *      current owner until the pending owner calls `acceptOwnership`. `renounceOwnership` is disabled
+ *      so the stream cannot be sent to the zero address.
  */
 contract AdvancedVestingWallet is VestingWalletCliff, Ownable2Step {
+    error RenounceDisabled();
+
     constructor(address beneficiary, uint64 startTimestamp, uint64 durationSeconds, uint64 cliffSeconds)
         VestingWallet(beneficiary, startTimestamp, durationSeconds)
         VestingWalletCliff(cliffSeconds)
     {}
+
+    /// @notice The beneficiary can only be replaced through Ownable2Step.
+    function renounceOwnership() public pure override {
+        revert RenounceDisabled();
+    }
 
     function transferOwnership(address newOwner) public override(Ownable, Ownable2Step) {
         Ownable2Step.transferOwnership(newOwner);

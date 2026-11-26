@@ -8,6 +8,8 @@ const maxFee = ethers.MaxUint256;
 const USD = 10n ** 18n;
 const EIP170 = 24_576;
 
+// Starting schedule passed to the factory constructor. Owner decision 24.11.2026:
+// permit, votes, and vesting use the same add-on as mint, burn, distribution, and pause.
 const ethFees = {
   baseFeeUsdWei: 6n * USD,
   mintFeeUsdWei: 2n * USD,
@@ -15,9 +17,9 @@ const ethFees = {
   distributionFeeUsdWei: 2n * USD,
   pauseFeeUsdWei: 2n * USD,
   transferFeeUsdWei: 20n * USD,
-  permitFeeUsdWei: 0n,
-  votesFeeUsdWei: 0n,
-  vestingFeeUsdWei: 0n,
+  permitFeeUsdWei: 2n * USD,
+  votesFeeUsdWei: 2n * USD,
+  vestingFeeUsdWei: 2n * USD,
 };
 
 const otherFees = {
@@ -27,9 +29,9 @@ const otherFees = {
   distributionFeeUsdWei: 1n * USD,
   pauseFeeUsdWei: 1n * USD,
   transferFeeUsdWei: 10n * USD,
-  permitFeeUsdWei: 0n,
-  votesFeeUsdWei: 0n,
-  vestingFeeUsdWei: 0n,
+  permitFeeUsdWei: 1n * USD,
+  votesFeeUsdWei: 1n * USD,
+  vestingFeeUsdWei: 1n * USD,
 };
 
 const zeroFees = {
@@ -64,6 +66,24 @@ function flagsFrom(bits: number) {
     permit: (bits & 32) !== 0,
     votes: (bits & 64) !== 0,
   };
+}
+
+function usdForFlags(fees: typeof ethFees, flags: ReturnType<typeof flagsFrom>) {
+  let usd = fees.baseFeeUsdWei;
+  if (flags.initialDistribution) usd += fees.distributionFeeUsdWei;
+  if (flags.mint) usd += fees.mintFeeUsdWei;
+  if (flags.burn) usd += fees.burnFeeUsdWei;
+  if (flags.pause) usd += fees.pauseFeeUsdWei;
+  if (flags.transferFee) usd += fees.transferFeeUsdWei;
+  if (flags.permit) usd += fees.permitFeeUsdWei;
+  if (flags.votes) usd += fees.votesFeeUsdWei;
+  return usd;
+}
+
+const NATIVE_USD = 2000n * USD;
+
+function nativeQuote(usd: bigint) {
+  return (usd * USD) / NATIVE_USD;
 }
 
 function config(extra: Record<string, unknown> = {}) {
@@ -206,7 +226,7 @@ describe("AdvancedTokenFactory", function () {
       votes: true,
     };
     const quote = await factory.currentFee(all);
-    expect(quote).to.equal(ethers.parseEther("0.017"));
+    expect(quote).to.equal(ethers.parseEther("0.019"));
     await expect(factory.deployAdvancedToken(config({ name: "All" }), all, advanced(), maxFee, { value: quote - 1n }))
       .to.be.revertedWithCustomError(factory, "InsufficientFee");
 
@@ -230,7 +250,7 @@ describe("AdvancedTokenFactory", function () {
     expect(await ethers.provider.getBalance(owner.address)).to.equal(ownerBefore - quote - gas);
 
     const other = (await deploySystem(otherFees)).factory;
-    expect(await other.currentFee(all)).to.equal(ethers.parseEther("0.0085"));
+    expect(await other.currentFee(all)).to.equal(ethers.parseEther("0.0095"));
 
     await feed.setPrice(2000n * 10n ** 18n);
     const eighteen = await deploySystem(ethFees, 18, 2000n * 10n ** 18n);
@@ -292,8 +312,34 @@ describe("AdvancedTokenFactory", function () {
     await expect(factory.connect(owner).pause()).to.be.revertedWithCustomError(factory, "OwnableUnauthorizedAccount");
   });
 
+  it("quotes every flag combination and vesting on both network schedules", async function () {
+    const eth = await deploySystem(ethFees);
+    const other = await deploySystem(otherFees);
+    for (const [factory, fees] of [
+      [eth.factory, ethFees],
+      [other.factory, otherFees],
+    ] as const) {
+      expect(await factory.baseFeeUsdWei()).to.equal(fees.baseFeeUsdWei);
+      expect(await factory.permitFeeUsdWei()).to.equal(fees.permitFeeUsdWei);
+      expect(await factory.votesFeeUsdWei()).to.equal(fees.votesFeeUsdWei);
+      expect(await factory.vestingFeeUsdWei()).to.equal(fees.vestingFeeUsdWei);
+      expect(await factory.currentVestingFee()).to.equal(nativeQuote(fees.vestingFeeUsdWei));
+      for (let bits = 0; bits < 128; bits++) {
+        const flags = flagsFrom(bits);
+        expect(await factory.currentFee(flags)).to.equal(nativeQuote(usdForFlags(fees, flags)));
+      }
+    }
+    expect(await eth.factory.currentFee(noFlags)).to.equal(ethers.parseEther("0.003"));
+    expect(await other.factory.currentFee(noFlags)).to.equal(ethers.parseEther("0.0015"));
+    expect(await eth.factory.currentVestingFee()).to.equal(ethers.parseEther("0.001"));
+    expect(await other.factory.currentVestingFee()).to.equal(ethers.parseEther("0.0005"));
+  });
+
   it("lets the owner change the fee schedule", async function () {
     const { factory, alice } = await deploySystem(ethFees);
+    expect(await factory.permitFeeUsdWei()).to.equal(2n * USD);
+    expect(await factory.votesFeeUsdWei()).to.equal(2n * USD);
+    expect(await factory.vestingFeeUsdWei()).to.equal(2n * USD);
     await expect(factory.setBaseFee(4n * USD)).to.emit(factory, "BaseFeeUpdated").withArgs(6n * USD, 4n * USD);
     await expect(factory.setOptionFee(await factory.OPTION_TRANSFER_FEE(), 5n * USD))
       .to.emit(factory, "OptionFeeUpdated")
@@ -302,9 +348,15 @@ describe("AdvancedTokenFactory", function () {
     await factory.setOptionFee(await factory.OPTION_BURN(), 1n * USD);
     await factory.setOptionFee(await factory.OPTION_DISTRIBUTION(), 1n * USD);
     await factory.setOptionFee(await factory.OPTION_PAUSE(), 1n * USD);
-    await factory.setOptionFee(await factory.OPTION_PERMIT(), 1n * USD);
-    await factory.setOptionFee(await factory.OPTION_VOTES(), 1n * USD);
-    await factory.setOptionFee(await factory.OPTION_VESTING(), 1n * USD);
+    await expect(factory.setOptionFee(await factory.OPTION_PERMIT(), 1n * USD))
+      .to.emit(factory, "OptionFeeUpdated")
+      .withArgs(await factory.OPTION_PERMIT(), 2n * USD, 1n * USD);
+    await expect(factory.setOptionFee(await factory.OPTION_VOTES(), 1n * USD))
+      .to.emit(factory, "OptionFeeUpdated")
+      .withArgs(await factory.OPTION_VOTES(), 2n * USD, 1n * USD);
+    await expect(factory.setOptionFee(await factory.OPTION_VESTING(), 1n * USD))
+      .to.emit(factory, "OptionFeeUpdated")
+      .withArgs(await factory.OPTION_VESTING(), 2n * USD, 1n * USD);
     expect(await factory.mintFeeUsdWei()).to.equal(1n * USD);
     expect(await factory.burnFeeUsdWei()).to.equal(1n * USD);
     expect(await factory.distributionFeeUsdWei()).to.equal(1n * USD);
