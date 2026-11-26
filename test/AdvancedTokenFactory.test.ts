@@ -423,8 +423,9 @@ describe("AdvancedTokenFactory", function () {
     await expect(factory.createVestingWallet(alice.address, start, duration, cliff, maxFee)).to.be.revertedWithCustomError(factory, "InsufficientFee");
     await factory.setOptionFee(await factory.OPTION_VESTING(), 0n);
     await expect(factory.createVestingWallet(ethers.ZeroAddress, start, duration, cliff, maxFee)).to.be.revertedWithCustomError(factory, "ZeroAddress");
+    const vestingArtifact = await ethers.getContractFactory("AdvancedVestingWallet");
     await expect(factory.createVestingWallet(alice.address, start, duration, duration + 1n, maxFee)).to.be.revertedWithCustomError(
-      await ethers.getContractFactory("AdvancedVestingWallet"),
+      vestingArtifact,
       "InvalidCliffDuration",
     );
 

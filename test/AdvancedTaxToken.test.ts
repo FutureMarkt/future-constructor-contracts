@@ -98,6 +98,7 @@ describe("AdvancedTaxToken", function () {
 
     it("reverts when buy + sell is above 10%", async function () {
       const [owner, factory, feeRecipient] = await ethers.getSigners();
+      const taxArtifact = await ethers.getContractFactory("AdvancedTaxToken");
       await expect(
         ethers.deployContract("AdvancedTaxToken", [
           "Tax",
@@ -110,10 +111,7 @@ describe("AdvancedTaxToken", function () {
           501,
           500,
         ]),
-      ).to.be.revertedWithCustomError(
-        await ethers.getContractFactory("AdvancedTaxToken"),
-        "FeeTooHigh",
-      );
+      ).to.be.revertedWithCustomError(taxArtifact, "FeeTooHigh");
     });
 
     it("reverts on a zero factory or a bad fee recipient", async function () {
