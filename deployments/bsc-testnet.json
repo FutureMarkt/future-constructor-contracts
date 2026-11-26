@@ -1,0 +1,237 @@
+{
+  "network": "bsc-testnet",
+  "title": "BNB Smart Chain testnet",
+  "chainId": 97,
+  "nativeSymbol": "tBNB",
+  "contractsCommit": "5fb7fed88e31618955b341ccf70639079759946d",
+  "deployer": "0x8A8D159DdF5FcE044192Ddd720D2EF4a4459Eb05",
+  "feeRecipient": "0x8A8D159DdF5FcE044192Ddd720D2EF4a4459Eb05",
+  "feeSchedule": "other",
+  "feesUsdWei": {
+    "baseFeeUsdWei": "3000000000000000000",
+    "mintFeeUsdWei": "1000000000000000000",
+    "burnFeeUsdWei": "1000000000000000000",
+    "distributionFeeUsdWei": "1000000000000000000",
+    "pauseFeeUsdWei": "1000000000000000000",
+    "transferFeeUsdWei": "10000000000000000000",
+    "permitFeeUsdWei": "1000000000000000000",
+    "votesFeeUsdWei": "1000000000000000000",
+    "vestingFeeUsdWei": "1000000000000000000"
+  },
+  "priceFeed": {
+    "address": "0x2514895c72f50D8bd4B4F9b1110F0D6bD2c97526",
+    "pair": "BNB / USD",
+    "docsUrl": "https://docs.chain.link/data-feeds/price-feeds/addresses?network=bnb-testnet",
+    "listUrl": "https://reference-data-directory.vercel.app/feeds-bsc-testnet.json",
+    "heartbeatSeconds": 3600,
+    "survey": {
+      "address": "0x2514895c72f50D8bd4B4F9b1110F0D6bD2c97526",
+      "description": "BNB / USD",
+      "decimals": "8",
+      "answer": "55171388303",
+      "updatedAt": "1795711770",
+      "ageSeconds": "1147",
+      "stale": "no"
+    }
+  },
+  "sequencerUptimeFeed": "0x0000000000000000000000000000000000000000",
+  "sequencerNote": "Chainlink publishes no L2 sequencer uptime feed for this testnet. https://docs.chain.link/data-feeds/l2-sequencer-feeds lists mainnets only and says new networks are not being added. AdvancedTokenFactory treats address(0) as the disabled check. BNB Smart Chain testnet is not in that list.",
+  "contracts": {
+    "tokenDeployer": "0x2370A5fd4afa4f2424bb1C1c90393a167D488d35",
+    "permitDeployer": "0xB5DF6da2f4BFdd9b7141659807f742B50a132264",
+    "votesDeployer": "0x644cf7f123287d6EE260dc459178596cd2dD2621",
+    "vestingDeployer": "0x372cD839b943bb72e314B10744f138b526df9044",
+    "factory": "0x58b77312FA3Df4c84776a1943CfD4ec752D4d508",
+    "receipts": {
+      "tokenDeployer": {
+        "hash": "0x7fb6fd56caa33aacb97fb34afc96fe98451f55275ffe5ba02ea2c416fc76c8b1",
+        "blockNumber": 145017213,
+        "gasUsed": "2762459"
+      },
+      "permitDeployer": {
+        "hash": "0xd7e1fdb7627abe9faa3e42332204394c330389f47974a14d48b554cc125fe3c8",
+        "blockNumber": 145017222,
+        "gasUsed": "3242491"
+      },
+      "votesDeployer": {
+        "hash": "0x0e7114254c4a2896c60f4f5618511012391ef03f783ce38592a026d9faaac2be",
+        "blockNumber": 145017232,
+        "gasUsed": "4287762"
+      },
+      "vestingDeployer": {
+        "hash": "0x9ad0b7e3380155507397d52a2bc766d087184628244c0a265141c9214e848c3b",
+        "blockNumber": 145017242,
+        "gasUsed": "1079701"
+      },
+      "factory": {
+        "hash": "0x10afe5a1b0838c870f5093588be3ccc80e9fa3866836761178021ed235c54251",
+        "blockNumber": 145017252,
+        "gasUsed": "2585074"
+      },
+      "setFactoryToken": {
+        "hash": "0xe53d54232649b2b2e4a1b5fb3b867c689cf145325d0bcbb09c56a0e651ccd45d",
+        "blockNumber": 145017261,
+        "gasUsed": "47376"
+      },
+      "setFactoryPermit": {
+        "hash": "0xebc08a4f775f5864518bf124d7a0d6169aadcea1bf1eca7993c92921d802c9f0",
+        "blockNumber": 145017271,
+        "gasUsed": "47376"
+      },
+      "setFactoryVotes": {
+        "hash": "0xb903e1a48250af3a280acbdf99c59f3490a9a841faf3d4974e08fc2df9c60de6",
+        "blockNumber": 145017281,
+        "gasUsed": "47376"
+      },
+      "setFactoryVesting": {
+        "hash": "0xacd070469da14c97de7cff990d898eeb674d4b5c47c443824d296ea388017cdf",
+        "blockNumber": 145017291,
+        "gasUsed": "47398"
+      }
+    }
+  },
+  "gas": {
+    "tokenDeployer": "2762459",
+    "permitDeployer": "3242491",
+    "votesDeployer": "4287762",
+    "vestingDeployer": "1079701",
+    "factory": "2585074",
+    "setFactoryEach": [
+      "47376",
+      "47376",
+      "47376",
+      "47398"
+    ]
+  },
+  "feeReadback": {
+    "description": "BNB / USD",
+    "decimals": 8,
+    "answer": "55171388303",
+    "updatedAt": "1795711770",
+    "ageSeconds": "1310",
+    "quoteError": null,
+    "storage": {
+      "baseFeeUsdWei": {
+        "actual": "3000000000000000000",
+        "expected": "3000000000000000000",
+        "match": true
+      },
+      "mintFeeUsdWei": {
+        "actual": "1000000000000000000",
+        "expected": "1000000000000000000",
+        "match": true
+      },
+      "burnFeeUsdWei": {
+        "actual": "1000000000000000000",
+        "expected": "1000000000000000000",
+        "match": true
+      },
+      "distributionFeeUsdWei": {
+        "actual": "1000000000000000000",
+        "expected": "1000000000000000000",
+        "match": true
+      },
+      "pauseFeeUsdWei": {
+        "actual": "1000000000000000000",
+        "expected": "1000000000000000000",
+        "match": true
+      },
+      "transferFeeUsdWei": {
+        "actual": "10000000000000000000",
+        "expected": "10000000000000000000",
+        "match": true
+      },
+      "permitFeeUsdWei": {
+        "actual": "1000000000000000000",
+        "expected": "1000000000000000000",
+        "match": true
+      },
+      "votesFeeUsdWei": {
+        "actual": "1000000000000000000",
+        "expected": "1000000000000000000",
+        "match": true
+      },
+      "vestingFeeUsdWei": {
+        "actual": "1000000000000000000",
+        "expected": "1000000000000000000",
+        "match": true
+      }
+    },
+    "quotes": {
+      "base": {
+        "usdWei": "3000000000000000000",
+        "nativeWei": "5437601068735245",
+        "expectedNativeWei": "5437601068735245",
+        "match": true
+      },
+      "initialDistribution": {
+        "usdWei": "4000000000000000000",
+        "nativeWei": "7250134758313660",
+        "expectedNativeWei": "7250134758313660",
+        "match": true
+      },
+      "mint": {
+        "usdWei": "4000000000000000000",
+        "nativeWei": "7250134758313660",
+        "expectedNativeWei": "7250134758313660",
+        "match": true
+      },
+      "burn": {
+        "usdWei": "4000000000000000000",
+        "nativeWei": "7250134758313660",
+        "expectedNativeWei": "7250134758313660",
+        "match": true
+      },
+      "pause": {
+        "usdWei": "4000000000000000000",
+        "nativeWei": "7250134758313660",
+        "expectedNativeWei": "7250134758313660",
+        "match": true
+      },
+      "transferFee": {
+        "usdWei": "13000000000000000000",
+        "nativeWei": "23562937964519395",
+        "expectedNativeWei": "23562937964519395",
+        "match": true
+      },
+      "permit": {
+        "usdWei": "4000000000000000000",
+        "nativeWei": "7250134758313660",
+        "expectedNativeWei": "7250134758313660",
+        "match": true
+      },
+      "votes": {
+        "usdWei": "4000000000000000000",
+        "nativeWei": "7250134758313660",
+        "expectedNativeWei": "7250134758313660",
+        "match": true
+      },
+      "allSevenFlags": {
+        "usdWei": "19000000000000000000",
+        "nativeWei": "34438140101989885",
+        "expectedNativeWei": "34438140101989885",
+        "match": true
+      }
+    },
+    "vesting": {
+      "usdWei": "1000000000000000000",
+      "nativeWei": "1812533689578415",
+      "expectedNativeWei": "1812533689578415",
+      "match": true
+    }
+  },
+  "feeReadbackError": null,
+  "frontendEnv": "NEXT_PUBLIC_ADVANCED_FACTORY_BSC_TESTNET",
+  "explorer": {
+    "factory": "https://testnet.bscscan.com/address/0x58b77312FA3Df4c84776a1943CfD4ec752D4d508",
+    "tokenDeployer": "https://testnet.bscscan.com/address/0x2370A5fd4afa4f2424bb1C1c90393a167D488d35",
+    "permitDeployer": "https://testnet.bscscan.com/address/0xB5DF6da2f4BFdd9b7141659807f742B50a132264",
+    "votesDeployer": "https://testnet.bscscan.com/address/0x644cf7f123287d6EE260dc459178596cd2dD2621",
+    "vestingDeployer": "https://testnet.bscscan.com/address/0x372cD839b943bb72e314B10744f138b526df9044"
+  },
+  "sourceVerification": {
+    "attempted": false,
+    "reason": "No explorer API key is configured (ETHERSCAN_API_KEY, ETHERSCAN_V2_API_KEY, BSCSCAN_API_KEY, POLYGONSCAN_API_KEY, ARBISCAN_API_KEY, BASESCAN_API_KEY are unset)."
+  },
+  "deployedAt": "2026-11-26T17:11:20.555Z"
+}

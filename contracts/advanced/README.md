@@ -205,7 +205,7 @@ Tax applies only when a transfer touches an address the owner has marked with `s
 ## Implementation status
 
 - Done: tax token, advanced token (distribution, mint, cap, holder burn, pause, tax, Ownable2Step), permit variant, votes variant, vesting wallet, factory, deployers, tests.
-- Not done: the app UI and testnet deployment. Permit, Votes, and vesting now have starting prices (решение владельца 24.11.2026).
+- Testnet addresses for this factory are in `docs/deployments/testnets.md`. The app UI is not pointed at them yet. Permit, Votes, and vesting now have starting prices (решение владельца 24.11.2026).
 
 ## Technical requirements
 
