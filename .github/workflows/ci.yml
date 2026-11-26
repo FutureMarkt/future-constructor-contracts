@@ -80,15 +80,16 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install solc 0.8.20 and Slither
+      - name: Install solc and Slither
         run: |
           pip install solc-select slither-analyzer
-          solc-select install 0.8.20
+          solc-select install 0.8.20 0.8.28
           solc-select use 0.8.20
 
       # One Hardhat compilation pulls in OpenZeppelin 5.4.0 and 5.7.0.
       # Slither 0.11.6 crashes on the mixed source maps (crytic-compile
       # KeyError). Compile each generation with solc on its own.
+      # Permit and votes need 0.8.28 because OpenZeppelin 5.7 uses MCOPY.
       - name: Run Slither
         run: |
           slither contracts/TokenFactory.sol \
@@ -98,13 +99,17 @@ jobs:
             --exclude-dependencies \
             --fail-none \
             --json slither-token-factory.json
-          slither contracts/advanced/AdvancedTaxToken.sol \
-            --compile-force-framework solc \
-            --solc-remaps "@openzeppelin/contracts-v5.7/=node_modules/@openzeppelin/contracts-v5.7/" \
-            --solc-args "--optimize --optimize-runs 200 --evm-version shanghai" \
-            --exclude-dependencies \
-            --fail-none \
-            --json slither-advanced-tax.json
+          solc-select use 0.8.28
+          for file in contracts/advanced/*.sol; do
+            name=$(basename "$file" .sol)
+            slither "$file" \
+              --compile-force-framework solc \
+              --solc-remaps "@openzeppelin/contracts-v5.7/=node_modules/@openzeppelin/contracts-v5.7/" \
+              --solc-args "--optimize --optimize-runs 200 --evm-version cancun" \
+              --exclude-dependencies \
+              --fail-none \
+              --json "slither-${name}.json"
+          done
 
       # Official Aderyn binaries were withdrawn (installer exits 1).
       # Tag aderyn-v0.6.8 still has #![feature] in aderyn_driver, so it
@@ -126,6 +131,5 @@ jobs:
         with:
           name: static-analysis
           path: |
-            slither-token-factory.json
-            slither-advanced-tax.json
+            slither-*.json
             aderyn-report.md

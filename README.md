@@ -25,11 +25,11 @@ Future Constructor is a smart contract factory that allows anyone to deploy stan
 ## Technology Stack
 
 - **Blockchain**: BNB Smart Chain (primary) + EVM-compatible chains
-- **Smart Contracts**: Solidity 0.8.20
+- **Smart Contracts**: Solidity 0.8.20 for TokenFactory and BasicERC20. Solidity 0.8.28 for the advanced token, its deployers, and AdvancedTokenFactory.
 - **Compiler Settings**: 
   - Optimizer enabled: 200 runs
-  - EVM Version: Shanghai
-  - Libraries: OpenZeppelin Contracts 5.4.0 for TokenFactory and BasicERC20. AdvancedTaxToken imports 5.7.0 through the @openzeppelin/contracts-v5.7 alias.
+  - EVM Version: Shanghai for 0.8.20, Cancun for 0.8.28 (OpenZeppelin 5.7 uses MCOPY)
+  - Libraries: OpenZeppelin Contracts 5.4.0 for TokenFactory and BasicERC20. New advanced contracts import 5.7.0 through the @openzeppelin/contracts-v5.7 alias.
 - **Development**: Hardhat 3.x, TypeScript
 - **Price Feeds**: Chainlink Aggregators
 
@@ -229,7 +229,7 @@ Built on OpenZeppelin Contracts v5; factory source code is verified on Sourcify;
 
 ### Known behavior
 
-`TokenFactory.currentFee()` rounds down. A non-zero `feeUsdWei` can become a zero native fee when `feeUsdWei * 1e18 < normalizedPrice`. At the maximum accepted price that starts below `1e7` wei-USD, far under the production fee of $3. The pending test in `test/TokenFactory.test.ts` records it. The formula is intentionally unchanged.
+`TokenFactory.currentFee()` rounds down. A non-zero `feeUsdWei` can become a zero native fee when `feeUsdWei * 1e18 < normalizedPrice`. At the maximum accepted price that starts below `1e7` wei-USD, far under the production fee of $3. The pending test in `test/TokenFactory.test.ts` records it. The formula is intentionally unchanged. `AdvancedTokenFactory` reverts with `FeeRoundsToZero` in that case.
 
 ### Security Best Practices Implemented
 
