@@ -346,9 +346,12 @@ function assertAllowedChain(chainId: bigint, expected: number): void {
 }
 
 function contractsCommit(): string {
-  const diff = execSync(`git diff --stat ${CONTRACTS_COMMIT} -- contracts`, { encoding: "utf8" });
-  if (diff.trim()) {
-    throw new Error(`contract sources differ from bytecode commit ${CONTRACTS_COMMIT}`);
+  const changed = execSync(`git diff --name-only ${CONTRACTS_COMMIT} -- contracts`, { encoding: "utf8" })
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.endsWith(".sol"));
+  if (changed.length > 0) {
+    throw new Error(`contract sources differ from bytecode commit ${CONTRACTS_COMMIT}: ${changed.join(", ")}`);
   }
   return CONTRACTS_COMMIT;
 }
