@@ -15,27 +15,28 @@ Based on the product specification (CPO §4.0.1) and the existing AdvancedTokenF
 
 2. **Minting for Administrator** (`mint`)
    - Owner can mint new tokens after deployment
-   - Should include optional supply cap (ERC20Capped)
-   - Cap enabled by default in UI
+   - Optional supply cap (ERC20Capped), off unless the deployer turns it on
 
-3. **Burning for Token Holders** (`burn`)
-   - Token holders can burn their own tokens (ERC20Burnable)
-   - NOT owner-burn from arbitrary addresses (anti-scam measure)
+3. **Burning** (`burn`)
+   - Present on the current form
+   - Not part of this tax change
 
 4. **Pause Mechanism** (`pause`)
    - Owner can pause all token transfers
    - Renounce ownership should be blocked while paused
    - Uses Pausable pattern from OpenZeppelin
 
-5. **Transfer Fee** (`transferFee`)
-   - Optional fee on transfers. The frontend ABI has a single `feeBasisPoints` (`uint16`) and one `feeRecipient`.
-   - The create form currently allows 1–1000 bps (0.01%–10%) on every transfer, with no exemption list.
-   - **Owner decision for the next implementation step (tax module), 24.11.2026:**
-     - the tax ceiling is hardcoded in the contract;
-     - buy tax + sell tax together are at most 10%;
-     - the pool and the factory are exempt.
-   - That decision is not representable by the current ABI (no separate buy/sell rates, no exemption list). The ABI and the `/create/advanced` form have to change together with the contract.
-   - Still a high-risk feature for DEX pools and scanner flags. Legal review is not recorded in the repos.
+5. **Transfer tax** (`transferFee`) — implemented in `AdvancedTaxToken.sol` (OpenZeppelin 5.7.0, `Ownable2Step`).
+   - Separate buy and sell rates in basis points.
+   - `MAX_TOTAL_FEE_BPS = 1000` is a constant. Buy + sell above 1000 reverts. The ceiling cannot be changed.
+   - After deployment, `setFees` can only keep a rate or lower it.
+   - Wallet-to-wallet transfers are not taxed.
+   - A transfer into a marked AMM pair is a sell. A transfer out of a marked pair to a non-pair is a buy. Pair-to-pair is charged the sell rate once.
+   - The token owner marks pairs with `setPool` (event `PoolUpdated`).
+   - The current owner and the immutable `factory` address are always excluded. The owner also has an exclusion list (`setExcluded`).
+   - `addLiquidity` by the owner is untaxed because the owner is excluded, so the pair receives the full amount.
+   - Sell never reverts because of the tax: at most 10% is taken from the amount, and the rest is delivered. There is no blacklist and no pause in this module.
+   - The frontend ABI still has one `feeBasisPoints`. The proposed replacement is below. The factory is not in this change.
 
 ### Factory Configuration
 
@@ -98,49 +99,80 @@ event AdvancedTokenCreated(
 );
 ```
 
-## Open Questions for Owner
+## Proposed factory ABI
 
-**Искал в:** CPO/план-развития-продукта.md, CMO/цены-продуктов-по-сетям.md, Product/OZ-UPGRADE-2026-10.md, Product/ROADMAP.md, Product/BACKLOG.md, memory/facts.md, future-constructor (dev), future-constructor-contracts (main), CEO brief
+`future-constructor/src/abi/advancedTokenFactory.ts` still has one `feeBasisPoints` and one `feeRecipient` inside `AdvancedConfig`. That cannot express buy and sell. The factory is not implemented here. Proposed shape for the next factory change:
 
-**Не нашёл:**
+```solidity
+struct TaxConfig {
+    address feeRecipient;
+    uint16 buyFeeBps;
+    uint16 sellFeeBps;
+}
 
-1. **Состав v1**: Делать текущие опции UI (распределение, admin mint, admin burn с любого адреса, пауза, комиссия на перевод) или рекомендованный набор из плана (mint + cap, burn холдером, пауза с защитой, Ownable2Step, без tax)?
+struct AdvancedConfig {
+    address[] distributionRecipients;
+    uint256[] distributionAmounts;
+    TaxConfig tax;
+}
+```
 
-2. **Transfer fee (tax).** Часть решения уже есть (см. выше): потолок в коде, buy+sell ≤ 10% суммарно, исключения для пула и фабрики. Искал в: CPO §4.0.1, CMO §2, ABI `advancedTokenFactory.ts`, страница `/create/advanced`, бриф CEO. Не нашёл: отдельные поля buy/sell и список исключений в ABI; кто задаёт адреса пула и фабрики (деплоер, владелец токена, константа); можно ли ставку только понижать после деплоя; нужна ли юридическая проверка до включения опции.
+`deployAdvancedToken` would pass `TaxConfig` through to `AdvancedTaxToken`. Pools do not belong in the deploy call: the pair address exists only after the token exists. The owner marks pairs later.
 
-3. **Permit, Votes, vesting**: Включать в эту версию или позже?
+```solidity
+function setPool(address pool, bool enabled) external;
+function setExcluded(address account, bool excluded) external;
+function setFees(uint16 newBuyFeeBps, uint16 newSellFeeBps) external;
+function setFeeRecipient(address newRecipient) external;
 
-4. **Версия OpenZeppelin для новых контрактов.** Текущая фабрика зафиксирована на **5.4.0** (это версия прод-байткода и точный пин из Product/OZ-UPGRADE-2026-10.md; 5.7.0 меняет слот ReentrancyGuard и разойдётся с уже верифицированным байткодом). Для расширенной фабрики документ рекомендует 5.7.x и явный `evmVersion: cancun`. Искал в: Product/OZ-UPGRADE-2026-10.md. Не нашёл отдельного «да» владельца на 5.7.0 против 5.6.x.
+event PoolUpdated(address indexed pool, bool isPool);
+event ExclusionUpdated(address indexed account, bool excluded);
+event FeesUpdated(uint16 buyFeeBps, uint16 sellFeeBps);
+event FeeRecipientUpdated(address indexed previousRecipient, address indexed newRecipient);
+event TaxCollected(address indexed from, address indexed to, uint256 fee, bool isBuy);
+```
 
-5. **Cap для minting**: Является ли cap обязательным или опциональным? По умолчанию включён или выключен?
+`AdvancedTaxToken` constructor `initialSupply` is the raw base-unit amount. The future factory should scale whole tokens by `10 ** decimals`, the same way `BasicERC20` does. The current form sends unscaled `initialSupply` and scaled distribution amounts.
 
-6. **Ownable2Step**: Включать ли в базовую реализацию?
+## Decisions already recorded
 
-7. **Pricing**: Цены опций по CMO §2 финальны или требуют пересмотра?
-   - Base: $6 (Ethereum) / $3 (другие сети)
-   - Опции: $1-2 каждая, кроме transferFee ($10-20)
+Owner via CEO on 23.11.2026, and the CPO on this step:
 
-## Implementation Status
+- v1 options are the current form, plus Permit, Votes, and vesting. Cap and Ownable2Step are free options. Cap defaults off. Ownable2Step is in this token.
+- Tax rules are the ones implemented above. Legal review is out of scope.
+- Permit, Votes, and vesting are in v1 but not in this change. Votes and vesting should be separate modules. Vesting is a `VestingWallet` created by the future factory.
+- New contracts use OpenZeppelin 5.7.0 via the `@openzeppelin/contracts-v5.7` alias. `TokenFactory` stays on 5.4.0.
+- Service prices follow `CMO/цены-продуктов-по-сетям.md` §2. The form will be aligned later.
 
-**Current Status**: PREPARED (not yet implemented)
+## Choices this module made
 
-This directory contains only the README with requirements. Actual implementation will begin after:
-1. Owner answers open questions above
-2. Final requirements are confirmed
-3. Contract specifications are approved
+These points are not in the owner answers of 23.11 or the CPO answers for this step.
 
-## Technical Requirements
+1. **Fee recipient can be changed.** `AdvancedERC20` in `future-constructor` (`src/lib/tokenSource/contracts/AdvancedERC20.sol`, branch `dev`) keeps `feeRecipient` immutable. Искал в: that file, `src/abi/advancedTokenFactory.ts`, CEO brief `CEO-agent/брифы/2026-11-23-advanced-tokens-product.md` §6, CPO answers for this step. Не нашёл a rule for changing the recipient after deploy. This token lets the owner call `setFeeRecipient`. The recipient cannot be the zero address or the token itself.
+2. **Pair to pair is a sell.** Искал в: the same files and the CPO tax rules. Не нашёл a rule for a transfer from one marked pair to another. This token charges the sell rate once.
+3. **`initialSupply` is raw base units.** `BasicERC20` and the downloadable `AdvancedERC20` multiply a whole-token amount by `10 ** decimals`. Искал в: those two contracts and `advancedTokenFactory.ts` (`uint256 initialSupply`, no scaling comment). Не нашёл which unit this standalone token should take. The constructor takes raw units. The future factory should scale whole tokens before it calls the constructor, the same way a caller of `BasicERC20` would pass an already decided amount only if that token did not scale itself. Do not scale twice.
+4. **The AMM router is not excluded.** The CEO brief §6.2 recommends excluding the pool and the router. The CPO answer for this step excludes the token factory and the owner, and marks pools. Искал в: brief §6.2 and the CPO tax rules. Не нашёл an instruction to exclude the router. A Uniswap V2 router does not hold the tokens, so a sell still works without that exclusion.
 
-- Existing factory: Solidity `0.8.20`, optimizer 200 runs, `evmVersion: shanghai` (explicit, same as the solc 0.8.20 default), OpenZeppelin **5.4.0** pinned.
-- Advanced factory, when implemented: OpenZeppelin **5.7.x** and an explicit `evmVersion` (document recommends `cancun`) in a separate compiler profile, so the already deployed factory bytecode is not rebuilt.
-- Factory init code plus the token must stay within 24,576 bytes.
+## Known behavior of the existing factory
 
-## Security Considerations
+`TokenFactory.currentFee()` uses integer division. A non-zero `feeUsdWei` becomes 0 native wei when `feeUsdWei * 1e18 < normalizedPrice`. At the highest allowed price this starts below `1e7` wei-USD. The production fee of $3 does not hit it. The pending test in `test/TokenFactory.test.ts` records the current behavior. It is not changed here.
+
+## Implementation status
+
+- Done in this change: `AdvancedTaxToken` and the Uniswap V2 mock tests.
+- Not done: factory, distribution, mint/burn, pause, cap, Permit, Votes, vesting, UI.
+
+## Technical requirements
+
+- Existing factory: Solidity `0.8.20`, optimizer 200 runs, `evmVersion: shanghai`, OpenZeppelin **5.4.0**.
+- Tax token: OpenZeppelin **5.7.0**, same compiler settings, so the deployed factory bytecode is not rebuilt.
+- Factory init code plus the token must stay within 24,576 bytes when the factory is written.
+
+## Security considerations
 
 - Full test coverage is required before any mainnet deployment.
 - The CEO brief asks for several rounds of AI review before a UI release. That review is not an independent third-party review.
 - No mainnet deployment without an explicit owner approval.
-- The transfer-fee feature needs the hardcoded ceiling, pool and factory exemptions, and a legal check that is not in the repos yet.
 
 ## References
 

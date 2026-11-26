@@ -29,7 +29,7 @@ Future Constructor is a smart contract factory that allows anyone to deploy stan
 - **Compiler Settings**: 
   - Optimizer enabled: 200 runs
   - EVM Version: Shanghai
-  - Libraries: OpenZeppelin Contracts 5.4.0 (imported via 5.1.0 with compatible components)
+  - Libraries: OpenZeppelin Contracts 5.4.0 for TokenFactory and BasicERC20. AdvancedTaxToken imports 5.7.0 through the @openzeppelin/contracts-v5.7 alias.
 - **Development**: Hardhat 3.x, TypeScript
 - **Price Feeds**: Chainlink Aggregators
 
@@ -226,6 +226,10 @@ Built on OpenZeppelin Contracts v5; factory source code is verified on Sourcify;
 - **Internal Review:** See [docs/INTERNAL_REVIEW.md](./docs/INTERNAL_REVIEW.md) for findings and status
 - **Use at Your Own Risk:** Deploy and use these contracts at your own discretion
 - **Report Issues:** If you discover security vulnerabilities, please report them to futuremarktgroup@gmail.com
+
+### Known behavior
+
+`TokenFactory.currentFee()` rounds down. A non-zero `feeUsdWei` can become a zero native fee when `feeUsdWei * 1e18 < normalizedPrice`. At the maximum accepted price that starts below `1e7` wei-USD, far under the production fee of $3. The pending test in `test/TokenFactory.test.ts` records it. The formula is intentionally unchanged.
 
 ### Security Best Practices Implemented
 
