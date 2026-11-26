@@ -15,12 +15,19 @@ abstract contract FactoryCaller is Ownable2Step {
     error OnlyFactory();
     error FactoryAlreadySet();
     error ZeroAddress();
+    error RenounceBeforeFactorySet();
 
     event FactorySet(address indexed factory);
 
     modifier onlyFactory() {
         if (msg.sender != factory) revert OnlyFactory();
         _;
+    }
+
+    /// @notice Renounce before `setFactory` would leave the deployer unbound forever.
+    function renounceOwnership() public override onlyOwner {
+        if (factory == address(0)) revert RenounceBeforeFactorySet();
+        super.renounceOwnership();
     }
 
     function setFactory(address factory_) external onlyOwner {
