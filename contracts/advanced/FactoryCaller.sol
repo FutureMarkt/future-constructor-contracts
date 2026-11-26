@@ -1,12 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {Ownable} from "@openzeppelin/contracts-v5.7/access/Ownable.sol";
+import {Ownable2Step} from "@openzeppelin/contracts-v5.7/access/Ownable2Step.sol";
 
 /**
- * @notice Deployer base. The factory address can be set once by the deployer owner.
+ * @notice Deployer base. The factory address can be set once by the current owner.
+ * @dev Ownership moves in two steps. A single `transferOwnership` does not let the pending
+ *      account call `setFactory`. The current owner can still bind the real factory, or
+ *      cancel the pending transfer, before the new owner accepts.
  */
-abstract contract FactoryCaller is Ownable {
+abstract contract FactoryCaller is Ownable2Step {
     address public factory;
 
     error OnlyFactory();

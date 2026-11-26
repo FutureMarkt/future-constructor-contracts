@@ -3,6 +3,8 @@ import { network } from "hardhat";
 
 const { ethers, networkHelpers } = await network.create();
 
+const maxFee = ethers.MaxUint256;
+
 const USD = 10n ** 18n;
 const EIP170 = 24_576;
 
@@ -98,6 +100,7 @@ async function deploySystem(
   const vestingDeployer = await ethers.deployContract("VestingDeployer", [owner.address]);
   const factory = await ethers.deployContract("AdvancedTokenFactory", [
     await feed.getAddress(),
+    ethers.ZeroAddress,
     feeRecipient.address,
     fees,
     {
@@ -135,7 +138,7 @@ async function deployedSize(address: string) {
 describe("AdvancedTokenFactory", function () {
   it("scales whole tokens once and keeps every runtime under the EIP-170 limit", async function () {
     const { factory, owner, tokenDeployer, permitDeployer, votesDeployer, vestingDeployer } = await deploySystem(zeroFees);
-    const tx = await factory.deployAdvancedToken(config({ decimals: 6, initialSupply: 5n }), noFlags, advanced());
+    const tx = await factory.deployAdvancedToken(config({ decimals: 6, initialSupply: 5n }), noFlags, advanced(), maxFee);
     const receipt = await tx.wait();
     const token = await ethers.getContractAt("AdvancedToken", createdToken(factory, receipt!));
     expect(await token.totalSupply()).to.equal(5n * 10n ** 6n);
@@ -184,9 +187,10 @@ describe("AdvancedTokenFactory", function () {
           },
           cap: flags.mint ? supply + 10n : 0n,
         }),
+        maxFee,
       );
     }
-    await factory.deployAdvancedToken(config({ name: "Zero", initialSupply: 0n }), noFlags, advanced());
+    await factory.deployAdvancedToken(config({ name: "Zero", initialSupply: 0n }), noFlags, advanced(), maxFee);
     expect(await factory.getNonce(owner.address)).to.equal(129n);
   });
 
@@ -203,7 +207,7 @@ describe("AdvancedTokenFactory", function () {
     };
     const quote = await factory.currentFee(all);
     expect(quote).to.equal(ethers.parseEther("0.017"));
-    await expect(factory.deployAdvancedToken(config({ name: "All" }), all, advanced(), { value: quote - 1n }))
+    await expect(factory.deployAdvancedToken(config({ name: "All" }), all, advanced(), maxFee, { value: quote - 1n }))
       .to.be.revertedWithCustomError(factory, "InsufficientFee");
 
     const ownerBefore = await ethers.provider.getBalance(owner.address);
@@ -217,6 +221,7 @@ describe("AdvancedTokenFactory", function () {
         tax: { feeRecipient: feeRecipient.address, buyFeeBps: 0, sellFeeBps: 1000 },
         cap: 20n,
       }),
+      maxFee,
       { value: quote + 1234n },
     );
     const receipt = await tx.wait();
@@ -237,7 +242,7 @@ describe("AdvancedTokenFactory", function () {
   it("sends a failed refund to the fee recipient and reverts when both reject it", async function () {
     const { factory, feeRecipient } = await deploySystem(zeroFees);
     const caller = await ethers.deployContract("RejectingCaller");
-    const data = factory.interface.encodeFunctionData("deployAdvancedToken", [config(), noFlags, advanced()]);
+    const data = factory.interface.encodeFunctionData("deployAdvancedToken", [config(), noFlags, advanced(), maxFee]);
     const before = await ethers.provider.getBalance(feeRecipient.address);
     await caller.callFactory(await factory.getAddress(), data, { value: 1000n });
     expect(await ethers.provider.getBalance(feeRecipient.address)).to.equal(before + 1000n);
@@ -255,7 +260,7 @@ describe("AdvancedTokenFactory", function () {
     const fees = { ...zeroFees, baseFeeUsdWei: 1n };
     const { factory } = await deploySystem(fees, 18, 10n ** 25n);
     await expect(factory.currentFee(noFlags)).to.be.revertedWithCustomError(factory, "FeeRoundsToZero");
-    await expect(factory.deployAdvancedToken(config(), noFlags, advanced())).to.be.revertedWithCustomError(factory, "FeeRoundsToZero");
+    await expect(factory.deployAdvancedToken(config(), noFlags, advanced(), maxFee)).to.be.revertedWithCustomError(factory, "FeeRoundsToZero");
   });
 
   it("rejects a bad price, a stale round, and a paused factory", async function () {
@@ -277,7 +282,7 @@ describe("AdvancedTokenFactory", function () {
     await expect(factory.currentFee(noFlags)).to.be.revertedWithCustomError(factory, "PriceTooOld");
 
     await factory.pause();
-    await expect(factory.deployAdvancedToken(config(), noFlags, advanced(), { value: ethers.parseEther("1") }))
+    await expect(factory.deployAdvancedToken(config(), noFlags, advanced(), maxFee, { value: ethers.parseEther("1") }))
       .to.be.revertedWithCustomError(factory, "EnforcedPause");
     await expect(factory.connect(alice).unpause()).to.be.revertedWithCustomError(factory, "OwnableUnauthorizedAccount");
     await factory.unpause();
@@ -318,29 +323,30 @@ describe("AdvancedTokenFactory", function () {
   it("rejects invalid config and a missing deployer", async function () {
     const { factory, alice } = await deploySystem(zeroFees);
     const core = factory;
-    await expect(factory.deployAdvancedToken(config({ name: "" }), noFlags, advanced())).to.be.revertedWithCustomError(core, "InvalidName");
-    await expect(factory.deployAdvancedToken(config({ name: "a".repeat(101) }), noFlags, advanced())).to.be.revertedWithCustomError(core, "InvalidName");
-    await expect(factory.deployAdvancedToken(config({ symbol: "" }), noFlags, advanced())).to.be.revertedWithCustomError(core, "InvalidSymbol");
-    await expect(factory.deployAdvancedToken(config({ symbol: "S".repeat(21) }), noFlags, advanced())).to.be.revertedWithCustomError(core, "InvalidSymbol");
-    await expect(factory.deployAdvancedToken(config({ decimals: 31 }), noFlags, advanced())).to.be.revertedWithCustomError(core, "DecimalsOutOfRange");
+    await expect(factory.deployAdvancedToken(config({ name: "" }), noFlags, advanced(), maxFee)).to.be.revertedWithCustomError(core, "InvalidName");
+    await expect(factory.deployAdvancedToken(config({ name: "a".repeat(101) }), noFlags, advanced(), maxFee)).to.be.revertedWithCustomError(core, "InvalidName");
+    await expect(factory.deployAdvancedToken(config({ symbol: "" }), noFlags, advanced(), maxFee)).to.be.revertedWithCustomError(core, "InvalidSymbol");
+    await expect(factory.deployAdvancedToken(config({ symbol: "S".repeat(21) }), noFlags, advanced(), maxFee)).to.be.revertedWithCustomError(core, "InvalidSymbol");
+    await expect(factory.deployAdvancedToken(config({ decimals: 31 }), noFlags, advanced(), maxFee)).to.be.revertedWithCustomError(core, "DecimalsOutOfRange");
     await expect(
-      factory.deployAdvancedToken(config({ name: "a".repeat(32) }), { ...noFlags, permit: true }, advanced()),
+      factory.deployAdvancedToken(config({ name: "a".repeat(32) }), { ...noFlags, permit: true }, advanced(), maxFee),
     ).to.be.revertedWithCustomError(core, "PermitNameTooLong");
     await expect(
-      factory.deployAdvancedToken(config(), { ...noFlags, initialDistribution: true }, advanced()),
+      factory.deployAdvancedToken(config(), { ...noFlags, initialDistribution: true }, advanced(), maxFee),
     ).to.be.revertedWithCustomError(core, "BadDistribution");
     await expect(
-      factory.deployAdvancedToken(config(), noFlags, advanced({ distributionRecipients: [alice.address], distributionAmounts: [1n] })),
+      factory.deployAdvancedToken(config(), noFlags, advanced({ distributionRecipients: [alice.address], distributionAmounts: [1n] }), maxFee),
     ).to.be.revertedWithCustomError(core, "BadDistribution");
     await expect(
-      factory.deployAdvancedToken(config(), noFlags, advanced({ tax: { feeRecipient: alice.address, buyFeeBps: 1, sellFeeBps: 0 } })),
+      factory.deployAdvancedToken(config(), noFlags, advanced({ tax: { feeRecipient: alice.address, buyFeeBps: 1, sellFeeBps: 0 } }), maxFee),
     ).to.be.revertedWithCustomError(core, "TaxConfigMismatch");
     await expect(
-      factory.deployAdvancedToken(config({ initialSupply: 2n ** 256n - 1n, decimals: 30 }), noFlags, advanced()),
+      factory.deployAdvancedToken(config({ initialSupply: 2n ** 256n - 1n, decimals: 30 }), noFlags, advanced(), maxFee),
     ).to.be.revertedWithCustomError(core, "SupplyOverflow");
 
     await expect(
       ethers.deployContract("AdvancedTokenFactory", [
+        ethers.ZeroAddress,
         ethers.ZeroAddress,
         alice.address,
         zeroFees,
@@ -351,6 +357,7 @@ describe("AdvancedTokenFactory", function () {
     await expect(
       ethers.deployContract("AdvancedTokenFactory", [
         await feed.getAddress(),
+        ethers.ZeroAddress,
         alice.address,
         zeroFees,
         { token: alice.address, permit: alice.address, votes: alice.address, vesting: alice.address },
@@ -365,6 +372,7 @@ describe("AdvancedTokenFactory", function () {
       config({ name: "Tax", initialSupply: 1_000_000n }),
       flags,
       advanced({ tax: { feeRecipient: feeRecipient.address, buyFeeBps: 200, sellFeeBps: 300 } }),
+      maxFee,
     );
     const receipt = await tx.wait();
     const token = await ethers.getContractAt("AdvancedToken", createdToken(factory, receipt!));
@@ -412,16 +420,16 @@ describe("AdvancedTokenFactory", function () {
     const duration = 1_000n;
     const cliff = 250n;
     await factory.setOptionFee(await factory.OPTION_VESTING(), 2n * USD);
-    await expect(factory.createVestingWallet(alice.address, start, duration, cliff)).to.be.revertedWithCustomError(factory, "InsufficientFee");
+    await expect(factory.createVestingWallet(alice.address, start, duration, cliff, maxFee)).to.be.revertedWithCustomError(factory, "InsufficientFee");
     await factory.setOptionFee(await factory.OPTION_VESTING(), 0n);
-    await expect(factory.createVestingWallet(ethers.ZeroAddress, start, duration, cliff)).to.be.revertedWithCustomError(factory, "ZeroAddress");
+    await expect(factory.createVestingWallet(ethers.ZeroAddress, start, duration, cliff, maxFee)).to.be.revertedWithCustomError(factory, "ZeroAddress");
     const vestingArtifact = await ethers.getContractFactory("AdvancedVestingWallet");
-    await expect(factory.createVestingWallet(alice.address, start, duration, duration + 1n)).to.be.revertedWithCustomError(
+    await expect(factory.createVestingWallet(alice.address, start, duration, duration + 1n, maxFee)).to.be.revertedWithCustomError(
       vestingArtifact,
       "InvalidCliffDuration",
     );
 
-    const vestTx = await factory.createVestingWallet(alice.address, start, duration, cliff);
+    const vestTx = await factory.createVestingWallet(alice.address, start, duration, cliff, maxFee);
     const vestReceipt = await vestTx.wait();
     let walletAddress = "";
     for (const log of vestReceipt!.logs) {
@@ -490,6 +498,7 @@ describe("AdvancedTokenFactory", function () {
       config({ name: "Permit", initialSupply: 10n }),
       { ...noFlags, permit: true },
       advanced(),
+      maxFee,
     );
     const permitReceipt = await permitTx.wait();
     const permit = await ethers.getContractAt("AdvancedTokenPermit", createdToken(factory, permitReceipt!));
@@ -515,6 +524,7 @@ describe("AdvancedTokenFactory", function () {
       config({ name: "Votes", initialSupply: 8n }),
       { ...noFlags, votes: true, permit: true },
       advanced(),
+      maxFee,
     );
     const votesReceipt = await votesTx.wait();
     const votes = await ethers.getContractAt("AdvancedTokenVotes", createdToken(factory, votesReceipt!));
@@ -567,6 +577,7 @@ describe("AdvancedTokenFactory", function () {
     const vestingDeployer = await ethers.deployContract("VestingDeployer", [owner.address]);
     const factory = await ethers.deployContract("AdvancedTokenFactory", [
       await feed.getAddress(),
+      ethers.ZeroAddress,
       await rejecting.getAddress(),
       ethFees,
       {
@@ -578,7 +589,7 @@ describe("AdvancedTokenFactory", function () {
     ]);
     await tokenDeployer.setFactory(await factory.getAddress());
     const quote = await factory.currentFee(noFlags);
-    await expect(factory.deployAdvancedToken(config(), noFlags, advanced(), { value: quote })).to.be.revertedWithCustomError(
+    await expect(factory.deployAdvancedToken(config(), noFlags, advanced(), maxFee, { value: quote })).to.be.revertedWithCustomError(
       factory,
       "FeeTransferFailed",
     );

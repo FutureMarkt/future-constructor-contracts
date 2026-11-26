@@ -76,6 +76,7 @@ abstract contract AdvancedTokenCore is ERC20, ERC20Burnable, Ownable2Step, Pausa
     error TaxDisabled();
     error CapExceeded(uint256 cap, uint256 supply);
     error BadDistribution();
+    error RenounceWhilePaused();
 
     constructor(AdvancedTokenInit memory init) ERC20(init.name, init.symbol) Ownable(init.initialOwner) {
         if (init.factory == address(0)) revert ZeroAddress();
@@ -181,6 +182,12 @@ abstract contract AdvancedTokenCore is ERC20, ERC20Burnable, Ownable2Step, Pausa
         emit ExclusionUpdated(account, excluded);
     }
 
+    /// @notice Renounce is rejected while paused, so `unpause` stays reachable.
+    function renounceOwnership() public override onlyOwner {
+        if (paused()) revert RenounceWhilePaused();
+        super.renounceOwnership();
+    }
+
     /// @notice Fee recipient can be changed. It cannot be the zero address or this token.
     function setFeeRecipient(address newRecipient) external onlyOwner {
         _validateFeeRecipient(newRecipient);
@@ -207,7 +214,9 @@ abstract contract AdvancedTokenCore is ERC20, ERC20Burnable, Ownable2Step, Pausa
     }
 
     function _quoteTax(address from, address to, uint256 value) internal view returns (uint256 fee, bool isBuy) {
-        if (!hasTax || value == 0 || isExcluded(from) || isExcluded(to)) return (0, false);
+        if (!hasTax || value == 0 || from == address(0) || to == address(0) || isExcluded(from) || isExcluded(to)) {
+            return (0, false);
+        }
         if (_pools[to]) return (_feeAmount(value, sellFeeBps), false);
         if (_pools[from]) return (_feeAmount(value, buyFeeBps), true);
         return (0, false);

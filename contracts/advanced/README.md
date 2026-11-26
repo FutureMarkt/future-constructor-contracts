@@ -108,7 +108,11 @@ The previous frontend file `future-constructor/src/abi/advancedTokenFactory.ts` 
 
 `TokenConfig.initialSupply`, `AdvancedConfig.distributionAmounts` and `AdvancedConfig.cap` are whole tokens. The factory multiplies each by `10 ** decimals` once. The token stores the raw result and does not scale again. Cap `0` means no cap. Pools are not deploy arguments: the owner calls `setPool` after the pair exists.
 
-`FeatureFlags` adds `permit` and `votes` to the old five flags. Vesting is a separate call, `createVestingWallet(beneficiary, startTimestamp, durationSeconds, cliffSeconds)`.
+`FeatureFlags` adds `permit` and `votes` to the old five flags. Vesting is a separate call, `createVestingWallet(beneficiary, startTimestamp, durationSeconds, cliffSeconds, maxFee)`. Both payable entry points take `maxFee` in native wei. If the quoted fee is above `maxFee`, the call reverts with `FeeAboveMax` and nothing is charged. A surplus `msg.value` is still refunded.
+
+The constructor takes `sequencerUptimeFeed`. The zero address disables the L2 sequencer check (L1). A non-zero address must be a contract. A positive fee then reverts when the feed answer is not 0 (sequencer down), when `startedAt` is 0 or in the future, or when the sequencer has been up for at most `SEQUENCER_GRACE_PERIOD` (1 hour, `<=`, the Chainlink consumer rule). `TokenFactory` is unchanged and does not read a sequencer feed.
+
+`createVestingWallet` reverts with `VestingAlreadyFinished` when `startTimestamp + durationSeconds <= block.timestamp`. A duration of 0 with a future start is still a timelock. Mint and burn are not taxed, including when the other side is a marked pool. `renounceOwnership` on a token or on this factory reverts with `RenounceWhilePaused` while that contract is paused.
 
 A votes deployment uses `AdvancedTokenVotes`, which also implements permit, because both features share one EIP-712 name. The name must be at most 31 bytes when `permit` or `votes` is set. The permit fee is charged only when the permit flag is set.
 
@@ -134,21 +138,32 @@ Initial amounts come from `CMO/цены-продуктов-по-сетям.md` �
 
 The CMO row for burn is titled “for the administrator”. The CPO decision for this delivery is holder `burn` and `burnFrom` by allowance. The $2 / $1 row is the price of that holder-burn option.
 
+## Deployer ownership
+
+The four deployers are `Ownable2Step`, not one-step `Ownable`. `setFactory` stays `onlyOwner` and can run only once.
+
+That is the smaller change, and it closes the reported capture. `transferOwnership` only stores a pending owner. That account cannot call `setFactory` or `deploy` until it accepts, and the current owner can still bind the real factory or cancel the pending transfer with `transferOwnership(address(0))`. A stranger cannot call `setFactory` at all. After a successful `setFactory`, a later owner cannot point the deployer at another factory.
+
+An accepted two-step handover before `setFactory` is an intentional change of owner: the new owner then holds the one binding slot. Bind the factory before starting that handover. Predicting the factory address with CREATE2 and binding inside the factory constructor was the other option. It removes that residual window, and it also forces every deployment script to get the address prediction right. The two-step owner is the variant this repo ships.
+
+The vesting wallet uses the same two-step owner. `release` pays the current owner until the pending owner calls `acceptOwnership`.
+
 ## Bytecode
 
 EIP-170 limit is 24,576 bytes of deployed code. One factory that embedded every token variant did not leave room, and EIP-1167 clones cannot set the immutable decimals, fees, or the 31-byte EIP-712 name. The factory therefore keeps four deployers and only makes an external call:
 
 | Contract | Deployed bytes | solc / EVM |
 | --- | ---: | --- |
-| `AdvancedToken` | 5,885 | 0.8.28 / cancun |
-| `AdvancedTokenPermit` | 7,677 | 0.8.28 / cancun |
-| `AdvancedTokenVotes` | 11,209 | 0.8.28 / cancun |
-| `TokenDeployer` | 12,040 | 0.8.28 / cancun |
-| `PermitDeployer` | 14,272 | 0.8.28 / cancun |
-| `VotesDeployer` | 19,107 | 0.8.28 / cancun |
-| `AdvancedVestingWallet` | 2,472 | 0.8.28 / cancun |
-| `VestingDeployer` | 4,081 | 0.8.28 / cancun |
-| `AdvancedTokenFactory` | 9,579 | 0.8.28 / cancun |
+| `AdvancedToken` | 5,976 | 0.8.28 / cancun |
+| `AdvancedTokenPermit` | 7,768 | 0.8.28 / cancun |
+| `AdvancedTokenVotes` | 11,300 | 0.8.28 / cancun |
+| `TokenDeployer` | 12,368 | 0.8.28 / cancun |
+| `PermitDeployer` | 14,600 | 0.8.28 / cancun |
+| `VotesDeployer` | 19,435 | 0.8.28 / cancun |
+| `AdvancedVestingWallet` | 2,715 | 0.8.28 / cancun |
+| `VestingDeployer` | 4,557 | 0.8.28 / cancun |
+| `AdvancedTokenFactory` | 10,189 | 0.8.28 / cancun |
+| `AdvancedTaxToken` | 4,423 | 0.8.20 / shanghai |
 | `TokenFactory` (unchanged) | 9,399 | 0.8.20 / shanghai |
 
 Permit and votes compile for Cancun because OpenZeppelin 5.7 `Bytes.sol` uses `MCOPY`. `TokenFactory` and `AdvancedTaxToken` stay on solc 0.8.20 and Shanghai.
@@ -160,16 +175,16 @@ Owner via CEO on 23.11.2026, and the CPO on the tax step and this step:
 - v1 options are distribution, mint, burn, pause, and tax, plus Permit, Votes, and vesting. Cap and Ownable2Step are free. Cap defaults off.
 - Tax: separate buy and sell rates, sum at most 1000 bps, rates only decrease, owner-marked pools, owner and factory excluded, wallet transfers untaxed. `setFeeRecipient` stays, with an event, and cannot be zero or the token. Pair-to-pair is one sell fee. The router is not excluded.
 - The token `initialSupply` is raw base units. Only the factory scales, and it scales once.
-- Votes is the separate `AdvancedTokenVotes` contract. Vesting is `AdvancedVestingWallet` (`VestingWalletCliff`: cliff, then linear).
+- Votes is the separate `AdvancedTokenVotes` contract. Vesting is `AdvancedVestingWallet` (`VestingWalletCliff`: cliff, then linear) with Ownable2Step.
 - New contracts use OpenZeppelin 5.7.0. `TokenFactory` stays on 5.4.0.
 - Service prices start from CMO §2 and are owner-configurable.
+- AI review #1: renounce is rejected while the token or the factory is paused. Mint and burn are untaxed. Decimals above 30 revert on the tax token too. A finished vesting schedule cannot be created. `maxFee` caps the native fee of a deploy. The new factory can take an L2 sequencer feed. Deployers are Ownable2Step.
 
 ## Open points
 
 1. **Permit, votes, and vesting prices.** Искал в: `CMO/цены-продуктов-по-сетям.md` §2 and the summary table. Не нашёл a price for Permit, Votes, or vesting. Those three storage fees default to 0. The owner can set them.
 2. **Vesting in the same transaction as the token.** Искал в: the CPO request (“created by the factory”) and the deploy ABI, which has no vesting fields. Не нашёл whether the buyer pays for vesting inside `deployAdvancedToken`. Vesting is `createVestingWallet`.
 3. **Permit inside the votes variant.** Искал в: the CPO request to keep Votes as a separate module where possible. Не нашёл whether that module must also expose permit. `AdvancedTokenVotes` includes permit because both features need one EIP-712 domain. The permit flag still controls only the permit fee.
-4. **`renounceOwnership` while paused.** Искал в: the CPO answers for this delivery and CEO brief §6. The 07.10 draft recommended blocking renounce while paused. Не нашёл an owner decision. Pause does not block renounce.
 
 ## Known behavior of the existing factory
 

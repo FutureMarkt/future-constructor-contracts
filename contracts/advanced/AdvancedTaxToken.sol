@@ -40,6 +40,9 @@ contract AdvancedTaxToken is ERC20, Ownable2Step {
     error FeeIncreaseForbidden(uint16 currentBuy, uint16 currentSell, uint16 newBuy, uint16 newSell);
     error ZeroAddress();
     error InvalidFeeRecipient(address recipient);
+    error DecimalsOutOfRange(uint8 decimals);
+
+    uint8 public constant MAX_DECIMALS = 30;
 
     /**
      * @param initialSupply Raw base units minted to `initialOwner`. Zero mints nothing.
@@ -59,6 +62,7 @@ contract AdvancedTaxToken is ERC20, Ownable2Step {
         uint16 buyFeeBps_,
         uint16 sellFeeBps_
     ) ERC20(name_, symbol_) Ownable(initialOwner) {
+        if (decimals_ > MAX_DECIMALS) revert DecimalsOutOfRange(decimals_);
         if (factory_ == address(0)) revert ZeroAddress();
         _validateFeeRecipient(feeRecipient_);
         _validateFeeSum(buyFeeBps_, sellFeeBps_);
