@@ -1,0 +1,285 @@
+{
+  "network": "sepolia",
+  "title": "Ethereum Sepolia",
+  "chainId": 11155111,
+  "nativeSymbol": "ETH",
+  "contractsCommit": "5fb7fed88e31618955b341ccf70639079759946d",
+  "deployer": "0x8A8D159DdF5FcE044192Ddd720D2EF4a4459Eb05",
+  "feeRecipient": "0x8A8D159DdF5FcE044192Ddd720D2EF4a4459Eb05",
+  "feeSchedule": "ethereum",
+  "feesUsdWei": {
+    "baseFeeUsdWei": "6000000000000000000",
+    "mintFeeUsdWei": "2000000000000000000",
+    "burnFeeUsdWei": "2000000000000000000",
+    "distributionFeeUsdWei": "2000000000000000000",
+    "pauseFeeUsdWei": "2000000000000000000",
+    "transferFeeUsdWei": "20000000000000000000",
+    "permitFeeUsdWei": "2000000000000000000",
+    "votesFeeUsdWei": "2000000000000000000",
+    "vestingFeeUsdWei": "2000000000000000000"
+  },
+  "priceFeed": {
+    "address": "0x694AA1769357215DE4FAC081bf1f309aDC325306",
+    "pair": "ETH / USD",
+    "docsUrl": "https://docs.chain.link/data-feeds/price-feeds/addresses?network=ethereum-sepolia",
+    "listUrl": "https://reference-data-directory.vercel.app/feeds-ethereum-testnet-sepolia.json",
+    "heartbeatSeconds": 3600,
+    "survey": {
+      "address": "0x694AA1769357215DE4FAC081bf1f309aDC325306",
+      "description": "ETH / USD",
+      "decimals": "8",
+      "answer": "169297243802",
+      "updatedAt": "1795712736",
+      "ageSeconds": "180",
+      "stale": "no"
+    }
+  },
+  "sequencerUptimeFeed": "0x0000000000000000000000000000000000000000",
+  "sequencerNote": "Chainlink publishes no L2 sequencer uptime feed for this testnet. https://docs.chain.link/data-feeds/l2-sequencer-feeds lists mainnets only and says new networks are not being added. AdvancedTokenFactory treats address(0) as the disabled check. Sepolia is an L1. A hidden \"L2 Sequencer Uptime Status Feed\" row in that price list (0x37Ae2933eE42D808b4D86458777a3EFc4E8e2976) has no code on Sepolia, so it is not used.",
+  "contracts": {
+    "tokenDeployer": "0x644cf7f123287d6EE260dc459178596cd2dD2621",
+    "permitDeployer": "0x372cD839b943bb72e314B10744f138b526df9044",
+    "votesDeployer": "0x58b77312FA3Df4c84776a1943CfD4ec752D4d508",
+    "vestingDeployer": "0xa75332F2e91755AeBFBE0d955563fCF3a352b384",
+    "factory": "0x513c798F755A0201ECfB7E2a686D552F661F4420",
+    "receipts": {
+      "tokenDeployer": {
+        "hash": "0x58d48292effad047f9b48a8f5c02cc267b459eeea7cfecea4bd0ce9ab3c6004d",
+        "blockNumber": 12217852,
+        "gasUsed": "19527343"
+      },
+      "permitDeployer": {
+        "hash": "0x9a50c24f19f65c80afd97df04ed9f16eabff4a28bfd89de726988781cde5f76e",
+        "blockNumber": 12217853,
+        "gasUsed": "22976349"
+      },
+      "votesDeployer": {
+        "hash": "0x6e48d700a8d8c3ad17d13c577980a957ad179182e32d45f01b8984d6c2e1ee5b",
+        "blockNumber": 12217854,
+        "gasUsed": "30453076"
+      },
+      "vestingDeployer": {
+        "hash": "0xf0b22c23222d9a7c92592e7825a0ec4a9135f4a16f373e8c41a64d537be0d988",
+        "blockNumber": 12217855,
+        "gasUsed": "7465131"
+      },
+      "factory": {
+        "hash": "0xf1b970258908b5b7e4aa9b457d6bee42b6e7ca6fdeb799da2ae076e9e3fb634d",
+        "blockNumber": 12217856,
+        "gasUsed": "17532444"
+      },
+      "setFactoryToken": {
+        "hash": "0xd5dd19a8cc819c4dbd979f680f069889df3f74f5c8726ef29d4493ea2ffc7c43",
+        "blockNumber": 12217857,
+        "gasUsed": "129396"
+      },
+      "setFactoryPermit": {
+        "hash": "0x0f5cf6f2df9d8e7dc4f39ed64b24beb3fe3d16aad39a61909e4538a7b3fe083a",
+        "blockNumber": 12217858,
+        "gasUsed": "129396"
+      },
+      "setFactoryVotes": {
+        "hash": "0xcb1d39725d83abdea7e819d4f186efc229e20f0244c56016d1daf291c8b2e0fa",
+        "blockNumber": 12217859,
+        "gasUsed": "129396"
+      },
+      "setFactoryVesting": {
+        "hash": "0xe2febce14bd343ce9fb243eb64839b46752deb1f1a27070df12c6f83b729eb32",
+        "blockNumber": 12217860,
+        "gasUsed": "129418"
+      }
+    }
+  },
+  "gas": {
+    "tokenDeployer": "19527343",
+    "permitDeployer": "22976349",
+    "votesDeployer": "30453076",
+    "vestingDeployer": "7465131",
+    "factory": "17532444",
+    "setFactoryEach": [
+      "129396",
+      "129396",
+      "129396",
+      "129418"
+    ]
+  },
+  "feeReadback": {
+    "description": "ETH / USD",
+    "decimals": 8,
+    "answer": "169297243802",
+    "updatedAt": "1795712736",
+    "ageSeconds": "300",
+    "quoteError": null,
+    "storage": {
+      "baseFeeUsdWei": {
+        "actual": "6000000000000000000",
+        "expected": "6000000000000000000",
+        "match": true
+      },
+      "mintFeeUsdWei": {
+        "actual": "2000000000000000000",
+        "expected": "2000000000000000000",
+        "match": true
+      },
+      "burnFeeUsdWei": {
+        "actual": "2000000000000000000",
+        "expected": "2000000000000000000",
+        "match": true
+      },
+      "distributionFeeUsdWei": {
+        "actual": "2000000000000000000",
+        "expected": "2000000000000000000",
+        "match": true
+      },
+      "pauseFeeUsdWei": {
+        "actual": "2000000000000000000",
+        "expected": "2000000000000000000",
+        "match": true
+      },
+      "transferFeeUsdWei": {
+        "actual": "20000000000000000000",
+        "expected": "20000000000000000000",
+        "match": true
+      },
+      "permitFeeUsdWei": {
+        "actual": "2000000000000000000",
+        "expected": "2000000000000000000",
+        "match": true
+      },
+      "votesFeeUsdWei": {
+        "actual": "2000000000000000000",
+        "expected": "2000000000000000000",
+        "match": true
+      },
+      "vestingFeeUsdWei": {
+        "actual": "2000000000000000000",
+        "expected": "2000000000000000000",
+        "match": true
+      }
+    },
+    "quotes": {
+      "base": {
+        "usdWei": "6000000000000000000",
+        "nativeWei": "3544062422550271",
+        "expectedNativeWei": "3544062422550271",
+        "match": true
+      },
+      "initialDistribution": {
+        "usdWei": "8000000000000000000",
+        "nativeWei": "4725416563400361",
+        "expectedNativeWei": "4725416563400361",
+        "match": true
+      },
+      "mint": {
+        "usdWei": "8000000000000000000",
+        "nativeWei": "4725416563400361",
+        "expectedNativeWei": "4725416563400361",
+        "match": true
+      },
+      "burn": {
+        "usdWei": "8000000000000000000",
+        "nativeWei": "4725416563400361",
+        "expectedNativeWei": "4725416563400361",
+        "match": true
+      },
+      "pause": {
+        "usdWei": "8000000000000000000",
+        "nativeWei": "4725416563400361",
+        "expectedNativeWei": "4725416563400361",
+        "match": true
+      },
+      "transferFee": {
+        "usdWei": "26000000000000000000",
+        "nativeWei": "15357603831051175",
+        "expectedNativeWei": "15357603831051175",
+        "match": true
+      },
+      "permit": {
+        "usdWei": "8000000000000000000",
+        "nativeWei": "4725416563400361",
+        "expectedNativeWei": "4725416563400361",
+        "match": true
+      },
+      "votes": {
+        "usdWei": "8000000000000000000",
+        "nativeWei": "4725416563400361",
+        "expectedNativeWei": "4725416563400361",
+        "match": true
+      },
+      "allSevenFlags": {
+        "usdWei": "38000000000000000000",
+        "nativeWei": "22445728676151717",
+        "expectedNativeWei": "22445728676151717",
+        "match": true
+      }
+    },
+    "vesting": {
+      "usdWei": "2000000000000000000",
+      "nativeWei": "1181354140850090",
+      "expectedNativeWei": "1181354140850090",
+      "match": true
+    }
+  },
+  "feeReadbackError": null,
+  "frontendEnv": "NEXT_PUBLIC_ADVANCED_FACTORY_SEPOLIA",
+  "explorer": {
+    "factory": "https://sepolia.etherscan.io/address/0x513c798F755A0201ECfB7E2a686D552F661F4420",
+    "tokenDeployer": "https://sepolia.etherscan.io/address/0x644cf7f123287d6EE260dc459178596cd2dD2621",
+    "permitDeployer": "https://sepolia.etherscan.io/address/0x372cD839b943bb72e314B10744f138b526df9044",
+    "votesDeployer": "https://sepolia.etherscan.io/address/0x58b77312FA3Df4c84776a1943CfD4ec752D4d508",
+    "vestingDeployer": "https://sepolia.etherscan.io/address/0xa75332F2e91755AeBFBE0d955563fCF3a352b384"
+  },
+  "sourceVerification": {
+    "attempted": true,
+    "provider": "sourcify",
+    "etherscan": "not used"
+  },
+  "deployedAt": "2026-11-26T17:10:39.201Z",
+  "sourcify": [
+    {
+      "contract": "TokenDeployer",
+      "address": "0x644cf7f123287d6EE260dc459178596cd2dD2621",
+      "status": "full",
+      "match": "exact_match",
+      "repoUrl": "https://repo.sourcify.dev/contracts/full_match/11155111/0x644cf7f123287d6EE260dc459178596cd2dD2621",
+      "apiUrl": "https://sourcify.dev/server/v2/contract/11155111/0x644cf7f123287d6EE260dc459178596cd2dD2621",
+      "message": "verified on Sourcify (full match, runtime exact_match, creation exact_match)"
+    },
+    {
+      "contract": "PermitDeployer",
+      "address": "0x372cD839b943bb72e314B10744f138b526df9044",
+      "status": "full",
+      "match": "exact_match",
+      "repoUrl": "https://repo.sourcify.dev/contracts/full_match/11155111/0x372cD839b943bb72e314B10744f138b526df9044",
+      "apiUrl": "https://sourcify.dev/server/v2/contract/11155111/0x372cD839b943bb72e314B10744f138b526df9044",
+      "message": "verified on Sourcify (full match, runtime exact_match, creation exact_match)"
+    },
+    {
+      "contract": "VotesDeployer",
+      "address": "0x58b77312FA3Df4c84776a1943CfD4ec752D4d508",
+      "status": "full",
+      "match": "exact_match",
+      "repoUrl": "https://repo.sourcify.dev/contracts/full_match/11155111/0x58b77312FA3Df4c84776a1943CfD4ec752D4d508",
+      "apiUrl": "https://sourcify.dev/server/v2/contract/11155111/0x58b77312FA3Df4c84776a1943CfD4ec752D4d508",
+      "message": "verified on Sourcify (full match, runtime exact_match, creation exact_match)"
+    },
+    {
+      "contract": "VestingDeployer",
+      "address": "0xa75332F2e91755AeBFBE0d955563fCF3a352b384",
+      "status": "full",
+      "match": "exact_match",
+      "repoUrl": "https://repo.sourcify.dev/contracts/full_match/11155111/0xa75332F2e91755AeBFBE0d955563fCF3a352b384",
+      "apiUrl": "https://sourcify.dev/server/v2/contract/11155111/0xa75332F2e91755AeBFBE0d955563fCF3a352b384",
+      "message": "verified on Sourcify (full match, runtime exact_match, creation exact_match)"
+    },
+    {
+      "contract": "AdvancedTokenFactory",
+      "address": "0x513c798F755A0201ECfB7E2a686D552F661F4420",
+      "status": "full",
+      "match": "exact_match",
+      "repoUrl": "https://repo.sourcify.dev/contracts/full_match/11155111/0x513c798F755A0201ECfB7E2a686D552F661F4420",
+      "apiUrl": "https://sourcify.dev/server/v2/contract/11155111/0x513c798F755A0201ECfB7E2a686D552F661F4420",
+      "message": "verified on Sourcify (full match, runtime exact_match, creation exact_match)"
+    }
+  ]
+}
