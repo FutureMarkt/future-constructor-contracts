@@ -130,6 +130,48 @@ export default defineConfig({
       chainId: 421614,
       timeout: 120000,
     },
+    // Public testnet RPCs used for Sourcify only. No private keys.
+    // FixedPriceAggregator is not referenced by any mainnet network or mainnet script.
+    sepoliaVerify: {
+      type: "http",
+      chainType: "l1",
+      url: "https://ethereum-sepolia-rpc.publicnode.com",
+      chainId: 11155111,
+      accounts: [],
+      timeout: 120000,
+    },
+    bscTestnet: {
+      type: "http",
+      chainType: "l1",
+      url: "https://bsc-testnet-rpc.publicnode.com",
+      chainId: 97,
+      accounts: [],
+      timeout: 120000,
+    },
+    arbitrumSepoliaVerify: {
+      type: "http",
+      chainType: "l1",
+      url: "https://sepolia-rollup.arbitrum.io/rpc",
+      chainId: 421614,
+      accounts: [],
+      timeout: 120000,
+    },
+    baseSepolia: {
+      type: "http",
+      chainType: "l1",
+      url: "https://sepolia.base.org",
+      chainId: 84532,
+      accounts: [],
+      timeout: 120000,
+    },
+    polygonAmoy: {
+      type: "http",
+      chainType: "l1",
+      url: "https://polygon-amoy-bor-rpc.publicnode.com",
+      chainId: 80002,
+      accounts: [],
+      timeout: 120000,
+    },
     base: {
       type: "http",
       chainType: "l1",
